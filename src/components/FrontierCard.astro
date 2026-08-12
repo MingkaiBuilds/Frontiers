@@ -36,12 +36,16 @@ const articleHref = post ? withBase(`/reports/${post.id}/`) : '#reports';
       <p class="font-mono text-lg tracking-[-0.04em] text-zinc-200">{frontier.metric}</p>
       <p class="mt-1 text-[9px] tracking-[0.14em] text-zinc-600 uppercase">{frontier.unit}</p>
     </div>
-    <a
-      href={articleHref}
-      class="card-link inline-flex items-center gap-2 text-[10px] font-semibold tracking-[0.14em] uppercase"
-      aria-label={`Read the latest ${frontier.name} report`}
-    >
-      Open report <span aria-hidden="true">↗</span>
-    </a>
+    {post ? (
+      <a
+        href={articleHref}
+        class="card-link inline-flex items-center gap-2 text-[10px] font-semibold tracking-[0.14em] uppercase"
+        aria-label={`Read the latest ${frontier.name} report`}
+      >
+        Open report <span aria-hidden="true">↗</span>
+      </a>
+    ) : (
+      <span class="font-mono text-[9px] tracking-[0.12em] text-zinc-700 uppercase">Awaiting report</span>
+    )}
   </div>
 </article>

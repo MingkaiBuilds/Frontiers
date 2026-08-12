@@ -309,6 +309,18 @@ a {
   text-shadow: 0 0 24px color-mix(in srgb, var(--frontier-color) 15%, transparent);
 }
 
+.archive-empty {
+  display: grid;
+  gap: 2rem;
+}
+
+@media (min-width: 768px) {
+  .archive-empty {
+    grid-template-columns: 1fr auto;
+    align-items: end;
+  }
+}
+
 .report-hero {
   background:
     linear-gradient(90deg, transparent 75%, rgba(255,255,255,0.025) 75%),

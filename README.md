@@ -18,16 +18,7 @@ physical-extremes/
 │   │   └── SiteHeader.astro
 │   ├── content/
 │   │   └── blog/
-│   │       ├── cryo-quantum/
-│   │       │   └── the-wiring-wall.md
-│   │       ├── deep-crust/
-│   │       │   └── electronics-beyond-the-cooling-line.md
-│   │       ├── deep-ocean/
-│   │       │   └── pressure-housings-are-not-the-system.md
-│   │       ├── deep-space/
-│   │       │   └── closed-loop-propellant.md
-│   │       └── fusion/
-│   │           └── divertor-heat-flux.md
+│   │       └── .gitkeep
 │   ├── data/
 │   │   └── frontiers.ts
 │   ├── layouts/
