@@ -15,6 +15,7 @@ const problems = posts
   });
 const activeCount = problems.filter(({ problem }) => problem.status !== 'Resolved').length;
 const disciplineCount = new Set(problems.flatMap(({ problem }) => problem.disciplines)).size;
+const authorMode = import.meta.env.DEV;
 ---
 
 <BaseLayout
@@ -59,7 +60,7 @@ const disciplineCount = new Set(problems.flatMap(({ problem }) => problem.discip
           <h2>No open problems indexed yet.</h2>
           <p>The registry will populate from unresolved questions in the first original engineering reports. No synthetic challenges or demonstration entries will be used.</p>
           <div>
-            <a class="button-primary" href={withBase('/studio/')}>Write the first report</a>
+            {authorMode && <a class="button-primary" href={withBase('/studio/')}>Write the first report</a>}
             <a class="button-secondary" href={DISCUSSION_URLS.investigationProposal}>Propose a direction ↗</a>
           </div>
         </div>

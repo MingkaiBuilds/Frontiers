@@ -7,6 +7,7 @@ import { withBase } from '@/utils/paths';
 const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
   (a, b) => a.data.published.valueOf() - b.data.published.valueOf(),
 );
+const authorMode = import.meta.env.DEV;
 ---
 
 <BaseLayout
@@ -14,6 +15,8 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
   description="A native Markdown and LaTeX writing studio for Physical Extremes engineering reports."
   robots="noindex, nofollow"
 >
+  {authorMode ? (
+  <>
   <header class="studio-hero border-b border-white/10">
     <div class="mx-auto max-w-[1480px] px-5 py-12 md:px-8 md:py-16">
       <a href={withBase('/')} class="eyebrow-link">← Return to research archive</a>
@@ -40,4 +43,15 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
       <ReportStudio posts={posts} />
     </div>
   </section>
+  </>
+  ) : (
+    <section class="grid min-h-[72vh] place-items-center px-5 py-20 text-center">
+      <div>
+        <p class="font-mono text-[9px] tracking-[.22em] text-zinc-700 uppercase">Author console / Restricted</p>
+        <h1 class="mt-6 text-[clamp(3.4rem,11vw,8rem)] leading-[.9] font-medium tracking-[-.07em] text-zinc-200">Console offline.</h1>
+        <p class="mx-auto mt-7 max-w-[52ch] text-sm leading-6 text-zinc-500">Report authoring is available only in the owner's local development environment. Public visitors can read reports, propose investigations, and join technical discussions.</p>
+        <a href={withBase('/')} class="text-link mt-10">Return to the archive <span>→</span></a>
+      </div>
+    </section>
+  )}
 </BaseLayout>

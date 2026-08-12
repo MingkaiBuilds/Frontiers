@@ -5,6 +5,7 @@ interface Props {
 
 const { compact = false } = Astro.props;
 import { withBase } from '@/utils/paths';
+const authorMode = import.meta.env.DEV;
 ---
 
 <header class:list={['site-header border-b border-white/10', compact && 'site-header--compact']}>
@@ -22,7 +23,7 @@ import { withBase } from '@/utils/paths';
       <a class="transition-colors hover:text-white" href={withBase('/problems/')}>Open Problems</a>
       <a class="transition-colors hover:text-white" href={withBase('/#community')}>Community</a>
       <a class="transition-colors hover:text-white" href={withBase('/#mission')}>Mission</a>
-      <a class="transition-colors hover:text-lime-300" href={withBase('/studio/')}>Write</a>
+      {authorMode && <a class="transition-colors hover:text-lime-300" href={withBase('/studio/')}>Write</a>}
     </nav>
 
     <div class="flex items-center gap-2 text-[9px] tracking-[0.14em] text-zinc-500 uppercase">

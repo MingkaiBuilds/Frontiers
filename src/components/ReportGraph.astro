@@ -105,6 +105,7 @@ const viewWidth = compact ? 260 : 1100;
 const viewHeight = compact ? Math.max(210, graphNodes.length * 64 + 10) : 500;
 const titleId = `graph-title-${compact ? 'compact' : 'full'}-${currentId?.replaceAll('/', '-') ?? 'index'}`;
 const studioHref = withBase('/studio/');
+const authorMode = import.meta.env.DEV;
 ---
 
 <div
@@ -129,7 +130,7 @@ const studioHref = withBase('/studio/');
         <span class="graph-empty__origin" aria-hidden="true"></span>
         <p>NO REPORT NODES INDEXED</p>
         <strong>The learning path begins with the first transmission.</strong>
-        <a href={studioHref}>Open report studio →</a>
+        {authorMode ? <a href={studioHref}>Open report studio →</a> : <span class="graph-empty__status">Awaiting first report</span>}
       </div>
     ) : (
     <svg
@@ -353,6 +354,7 @@ const studioHref = withBase('/studio/');
   .graph-empty strong { color: #71717a; font-size: .78rem; font-weight: 500; }
   .graph-empty a { margin-top: .5rem; color: #b8f45d; font-family: var(--font-mono); font-size: .56rem; letter-spacing: .1em; text-decoration: none; text-transform: uppercase; }
   .graph-empty a:hover { color: #d9f99d; }
+  .graph-empty__status { margin-top: .5rem; color: #3f3f46; font-family: var(--font-mono); font-size: .56rem; letter-spacing: .1em; text-transform: uppercase; }
   svg { display: block; width: 100%; min-width: 780px; height: auto; }
   .graph-edge { fill: none; stroke: #27272a; stroke-width: 1; transition: stroke 180ms ease, filter 180ms ease, opacity 180ms ease; }
   .arrow-head { fill: #3f3f46; transition: fill 180ms ease; }

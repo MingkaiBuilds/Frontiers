@@ -58,7 +58,7 @@ npm run build
 
 ## Authoring a report
 
-Open `/Frontiers/studio/` on the deployed site to use the browser-based report studio. It provides live Markdown and KaTeX rendering, local draft persistence, technical-figure import, and a repository-ready ZIP export. The studio does not transmit drafts or GitHub credentials.
+Run `npm run dev`, then open `/Frontiers/studio/` on the local site to use the owner-only report studio. It provides live Markdown and KaTeX rendering, local draft persistence, technical-figure import, and a repository-ready ZIP export. Production builds replace the studio with a restricted console notice, and public navigation never links to the authoring route.
 
 The ZIP contains the report and all imported images under their final repository paths. Copy its `src/` and `public/` folders into the repository, then commit and push to publish.
 

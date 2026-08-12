@@ -12,6 +12,7 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
   (a, b) => b.data.published.valueOf() - a.data.published.valueOf(),
 );
 const openProblemCount = posts.reduce((total, post) => total + post.data.openProblems.length, 0);
+const authorMode = import.meta.env.DEV;
 ---
 
 <BaseLayout>
@@ -199,7 +200,7 @@ const openProblemCount = posts.reduce((total, post) => total + post.data.openPro
             <h3 class="mt-4 text-2xl font-medium tracking-[-.04em] text-zinc-400 md:text-4xl">No transmissions published yet.</h3>
             <p class="mt-4 max-w-[54ch] text-sm leading-6 text-zinc-600">The archive is deliberately empty. The first entry will be an original Physical Extremes engineering report, not demonstration content.</p>
           </div>
-          <a href={withBase('/studio/')} class="text-link">Begin the first report <span>→</span></a>
+          {authorMode && <a href={withBase('/studio/')} class="text-link">Begin the first report <span>→</span></a>}
         </div>
       )}
     </div>
