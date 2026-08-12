@@ -6,6 +6,7 @@ import ReportRow from '@/components/ReportRow.astro';
 import ReportGraph from '@/components/ReportGraph.astro';
 import { FRONTIERS } from '@/data/frontiers';
 import { withBase } from '@/utils/paths';
+import { DISCUSSION_URLS } from '@/data/site';
 
 const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
   (a, b) => b.data.published.valueOf() - a.data.published.valueOf(),
@@ -138,11 +139,50 @@ const openProblemCount = posts.reduce((total, post) => total + post.data.openPro
     </div>
   </section>
 
+  <section id="community" class="scroll-mt-10 border-b border-white/10 px-5 py-20 md:px-8 md:py-28">
+    <div class="mx-auto max-w-[1480px]">
+      <div class="section-heading">
+        <div>
+          <p class="section-kicker">05 / Engineering commons</p>
+          <h2>Turn reading into work</h2>
+        </div>
+        <p>Use structured discussions to test assumptions, propose bounded investigations, and publish the useful failures that move frontier systems forward.</p>
+      </div>
+
+      <div class="community-routes mt-12">
+        <a href={DISCUSSION_URLS.reportQuestions}>
+          <span>01 / Interrogate</span>
+          <strong>Report Q&A</strong>
+          <p>Question an equation, system boundary, assumption, or conclusion.</p>
+          <i>Open form ↗</i>
+        </a>
+        <a href={DISCUSSION_URLS.technicalCritique}>
+          <span>02 / Correct</span>
+          <strong>Technical critique</strong>
+          <p>Bring evidence that could clarify or materially revise a report.</p>
+          <i>Open form ↗</i>
+        </a>
+        <a href={DISCUSSION_URLS.investigationProposal}>
+          <span>03 / Propose</span>
+          <strong>Investigation proposal</strong>
+          <p>Reduce a frontier ambition to a precise, testable engineering question.</p>
+          <i>Open form ↗</i>
+        </a>
+        <a href={DISCUSSION_URLS.buildLog}>
+          <span>04 / Demonstrate</span>
+          <strong>Build log</strong>
+          <p>Share simulations, prototypes, experiments, and useful failures.</p>
+          <i>Open form ↗</i>
+        </a>
+      </div>
+    </div>
+  </section>
+
   <section id="reports" class="scroll-mt-10 px-5 py-20 md:px-8 md:py-28">
     <div class="mx-auto max-w-[1480px]">
       <div class="section-heading">
         <div>
-          <p class="section-kicker">05 / Field reports</p>
+          <p class="section-kicker">06 / Field reports</p>
           <h2>Latest transmissions</h2>
         </div>
         <p>Dense, cited engineering analysis for readers who want the governing equation and the manufacturing consequence.</p>

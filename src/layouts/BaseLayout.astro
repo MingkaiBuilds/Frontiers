@@ -2,6 +2,7 @@
 import '@/styles/global.css';
 import SiteHeader from '@/components/SiteHeader.astro';
 import { withBase } from '@/utils/paths';
+import { DISCUSSIONS_URL } from '@/data/site';
 
 interface Props {
   title?: string;
@@ -85,6 +86,7 @@ const serializedStructuredData = structuredData
         <p>© {new Date().getFullYear()} Physical Extremes / Independent field notes</p>
         <div class="flex gap-4 font-mono">
           <a href={withBase('/problems/')}>Open problems</a>
+          <a href={DISCUSSIONS_URL}>Discussions</a>
           <a href={withBase('/rss.xml')}>RSS</a>
         </div>
       </div>

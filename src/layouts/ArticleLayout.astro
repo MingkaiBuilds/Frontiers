@@ -4,7 +4,7 @@ import BaseLayout from './BaseLayout.astro';
 import ReportGraph from '@/components/ReportGraph.astro';
 import { frontierByName } from '@/data/frontiers';
 import { withBase } from '@/utils/paths';
-import { DISCUSSIONS_URL } from '@/data/site';
+import { DISCUSSION_URLS } from '@/data/site';
 
 interface Heading {
   depth: number;
@@ -164,7 +164,8 @@ const structuredData = {
             <p>Bring evidence, expose a weak assumption, or propose the next experiment. Confirmed work can become a revision to the report.</p>
           </div>
           <div class="report-participation__actions">
-            <a href={DISCUSSIONS_URL}>Open the discussion <span>↗</span></a>
+            <a href={DISCUSSION_URLS.reportQuestions}>Ask about this report <span>↗</span></a>
+            <a href={DISCUSSION_URLS.technicalCritique}>Submit technical critique <span>↗</span></a>
             <a href={withBase('/problems/')}>Browse open problems <span>→</span></a>
           </div>
         </section>
