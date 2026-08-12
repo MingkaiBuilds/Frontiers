@@ -21,6 +21,11 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v7
 
+      # Registers the repository's Pages metadata before Astro uploads the
+      # generated artifact. This is required for a repository's first deploy.
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
       - name: Install, build, and upload Astro site
         uses: withastro/action@v6
         with:
