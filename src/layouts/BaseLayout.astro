@@ -2,7 +2,13 @@
 import '@/styles/global.css';
 import SiteHeader from '@/components/SiteHeader.astro';
 import { withBase } from '@/utils/paths';
-import { DISCUSSIONS_URL } from '@/data/site';
+import {
+  COPYRIGHT_YEAR,
+  CREATOR_NAME,
+  DISCUSSIONS_URL,
+  SITE_MARK,
+  SITE_NAME,
+} from '@/data/site';
 
 interface Props {
   title?: string;
@@ -31,9 +37,16 @@ const {
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 const imageURL = new URL(image, Astro.site);
-const serializedStructuredData = structuredData
-  ? JSON.stringify(structuredData).replaceAll('<', '\\u003c')
-  : undefined;
+const pageStructuredData = structuredData ?? {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: SITE_NAME,
+  url: canonicalURL.href,
+  creator: { '@type': 'Person', name: CREATOR_NAME },
+  copyrightHolder: { '@type': 'Person', name: CREATOR_NAME },
+  copyrightYear: COPYRIGHT_YEAR,
+};
+const serializedStructuredData = JSON.stringify(pageStructuredData).replaceAll('<', '\\u003c');
 ---
 
 <!doctype html>
@@ -44,6 +57,8 @@ const serializedStructuredData = structuredData
     <meta name="generator" content={Astro.generator} />
     <meta name="theme-color" content="#070909" />
     <meta name="description" content={description} />
+    <meta name="author" content={CREATOR_NAME} />
+    <meta name="copyright" content={`© ${COPYRIGHT_YEAR} ${CREATOR_NAME}. All rights reserved.`} />
     <meta name="robots" content={robots} />
     <link rel="canonical" href={canonicalURL} />
     <link rel="icon" type="image/png" href={withBase('/favicon.png')} />
@@ -68,9 +83,7 @@ const serializedStructuredData = structuredData
         <meta property="article:section" content={articleMeta.section} />
       </>
     )}
-    {serializedStructuredData && (
-      <script type="application/ld+json" set:html={serializedStructuredData} is:inline></script>
-    )}
+    <script type="application/ld+json" set:html={serializedStructuredData} is:inline></script>
 
     <title>{title}</title>
   </head>
@@ -83,8 +96,9 @@ const serializedStructuredData = structuredData
     </main>
     <footer class="border-t border-white/10">
       <div class="mx-auto flex max-w-[1480px] flex-col gap-3 px-5 py-7 text-[9px] tracking-[0.15em] text-zinc-600 uppercase md:flex-row md:items-center md:justify-between md:px-8">
-        <p>© {new Date().getFullYear()} Physical Extremes / Independent field notes</p>
-        <div class="flex gap-4 font-mono">
+        <p>© {COPYRIGHT_YEAR} {CREATOR_NAME} / {SITE_MARK} / All rights reserved</p>
+        <div class="flex flex-wrap gap-4 font-mono">
+          <a href={withBase('/about/')}>About / Colophon</a>
           <a href={withBase('/problems/')}>Open problems</a>
           <a href={DISCUSSIONS_URL}>Discussions</a>
           <a href={withBase('/rss.xml')}>RSS</a>

@@ -4,7 +4,7 @@ import BaseLayout from './BaseLayout.astro';
 import ReportGraph from '@/components/ReportGraph.astro';
 import { frontierByName } from '@/data/frontiers';
 import { withBase } from '@/utils/paths';
-import { DISCUSSION_URLS } from '@/data/site';
+import { COPYRIGHT_YEAR, CREATOR_NAME, DISCUSSION_URLS, SITE_MARK, SITE_NAME } from '@/data/site';
 
 interface Heading {
   depth: number;
@@ -34,15 +34,23 @@ const reviewedDate = (post.data.lastReviewed ?? post.data.updated ?? post.data.p
 });
 const toc = headings.filter((heading) => heading.depth === 2 || heading.depth === 3);
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+const modifiedDate = post.data.updated ?? post.data.published;
+const citation = `${post.data.author}. “${post.data.title}.” ${SITE_NAME}, ${post.data.published.getUTCFullYear()}, ${canonicalURL.href}`;
 const structuredData = {
   '@context': 'https://schema.org',
   '@type': 'TechArticle',
   headline: post.data.title,
   description: post.data.description,
   datePublished: post.data.published.toISOString(),
-  dateModified: (post.data.updated ?? post.data.published).toISOString(),
+  dateModified: modifiedDate.toISOString(),
   author: { '@type': 'Person', name: post.data.author },
-  publisher: { '@type': 'Organization', name: 'Physical Extremes' },
+  publisher: {
+    '@type': 'Organization',
+    name: SITE_NAME,
+    founder: { '@type': 'Person', name: CREATOR_NAME },
+  },
+  copyrightHolder: { '@type': 'Person', name: post.data.copyrightHolder },
+  copyrightYear: post.data.published.getUTCFullYear(),
   articleSection: post.data.frontier,
   proficiencyLevel: post.data.difficulty,
   mainEntityOfPage: canonicalURL.href,
@@ -168,6 +176,19 @@ const structuredData = {
             <a href={DISCUSSION_URLS.technicalCritique}>Submit technical critique <span>↗</span></a>
             <a href={withBase('/problems/')}>Browse open problems <span>→</span></a>
           </div>
+        </section>
+
+        <section class="report-rights border-t border-white/10 pt-8" aria-labelledby="report-rights-title">
+          <p class="section-kicker">Authorship and provenance</p>
+          <h2 id="report-rights-title" class="mt-4 text-xl font-medium tracking-[-.035em] text-zinc-300">A named, versioned record.</h2>
+          <dl class="mt-6 grid gap-px bg-white/10 font-mono text-[9px] tracking-[.08em] uppercase sm:grid-cols-2">
+            <div class="bg-[#080a0a] p-4"><dt class="text-zinc-700">Author</dt><dd class="mt-2 text-zinc-400">{post.data.author}</dd></div>
+            <div class="bg-[#080a0a] p-4"><dt class="text-zinc-700">Rights holder</dt><dd class="mt-2 text-zinc-400">{post.data.copyrightHolder}</dd></div>
+            <div class="bg-[#080a0a] p-4"><dt class="text-zinc-700">First published</dt><dd class="mt-2 text-zinc-400">{date}</dd></div>
+            <div class="bg-[#080a0a] p-4"><dt class="text-zinc-700">Current revision</dt><dd class="mt-2 text-zinc-400">v{post.data.revision} / {modifiedDate.toISOString().slice(0, 10)}</dd></div>
+          </dl>
+          <p class="mt-5 text-xs leading-5 text-zinc-600">Suggested citation: {citation}</p>
+          <p class="mt-3 font-mono text-[9px] tracking-[.08em] text-zinc-700 uppercase">© {post.data.published.getUTCFullYear() || COPYRIGHT_YEAR} {post.data.copyrightHolder}. {SITE_MARK}. All rights reserved.</p>
         </section>
       </div>
 

@@ -1,6 +1,7 @@
 import { defineCollection } from 'astro:content';
 import { glob } from 'astro/loaders';
 import { z } from 'astro/zod';
+import { CREATOR_NAME } from './data/site';
 
 const reference = z.object({
   title: z.string(),
@@ -42,7 +43,8 @@ const blog = defineCollection({
     lastReviewed: z.coerce.date().optional(),
     readingTime: z.string(),
     reportNo: z.string(),
-    author: z.string().default('Physical Extremes'),
+    author: z.string().default(CREATOR_NAME),
+    copyrightHolder: z.string().default(CREATOR_NAME),
     revision: z.string().default('1.0'),
     difficulty: z.enum(['Foundational', 'Intermediate', 'Advanced']).default('Advanced'),
     evidenceStatus: z.enum([

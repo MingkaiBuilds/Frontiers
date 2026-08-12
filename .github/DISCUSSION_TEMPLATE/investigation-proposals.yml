@@ -4,6 +4,8 @@ body:
     attributes:
       value: |
         Propose a bounded engineering question that could become an open problem or future report. Specific constraints and evidence make proposals actionable.
+
+        Submissions remain yours and are handled under the [Physical Extremes contribution terms](https://github.com/MingkaiBuilds/Frontiers/blob/main/CONTRIBUTING.md). Do not post confidential or third-party material without permission.
   - type: dropdown
     id: frontier
     attributes:
@@ -59,4 +61,3 @@ body:
       options:
         - label: I separated demonstrated evidence from projection and disclosed major uncertainty.
           required: true
-

@@ -1,0 +1,16 @@
+cff-version: 1.2.0
+message: "If you reference Physical Extremes as a project, cite it using this metadata. Individual reports provide report-specific citations."
+title: "Physical Extremes"
+type: software
+authors:
+  - name: "Mingkai"
+version: 1.0.0
+date-released: 2026-08-12
+repository-code: "https://github.com/MingkaiBuilds/Frontiers"
+url: "https://mingkaibuilds.github.io/Frontiers/"
+abstract: "An independent engineering archive for deep reports across space, ocean, crust, fusion energy, and cryo-quantum infrastructure."
+keywords:
+  - engineering
+  - physical frontiers
+  - technical reports
+  - Astro

@@ -1,6 +1,7 @@
 import rss from '@astrojs/rss';
 import { getCollection } from 'astro:content';
 import { withBase } from '@/utils/paths';
+import { CREATOR_NAME } from '@/data/site';
 
 export async function GET(context: { site?: URL }) {
   const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
@@ -21,6 +22,6 @@ export async function GET(context: { site?: URL }) {
         ? `<updated>${post.data.updated.toISOString()}</updated>`
         : undefined,
     })),
-    customData: '<language>en-us</language>',
+    customData: `<language>en-us</language><managingEditor>${CREATOR_NAME}</managingEditor><copyright>© 2026 ${CREATOR_NAME}. All rights reserved.</copyright>`,
   });
 }

@@ -1,0 +1,95 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { withBase } from '@/utils/paths';
+import { COPYRIGHT_YEAR, CREATOR_NAME, GITHUB_REPOSITORY_URL, SITE_MARK, SITE_NAME } from '@/data/site';
+
+const structuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'AboutPage',
+  name: `About ${SITE_NAME}`,
+  url: new URL(Astro.url.pathname, Astro.site).href,
+  mainEntity: {
+    '@type': 'Organization',
+    name: SITE_NAME,
+    foundingDate: String(COPYRIGHT_YEAR),
+    founder: { '@type': 'Person', name: CREATOR_NAME },
+  },
+};
+---
+
+<BaseLayout
+  title={`About / Colophon — ${SITE_NAME}`}
+  description={`${SITE_NAME} is an independent engineering archive founded and created by ${CREATOR_NAME}.`}
+  structuredData={structuredData}
+>
+  <header class="border-b border-white/10 px-5 py-16 md:px-8 md:py-24">
+    <div class="mx-auto max-w-[1480px]">
+      <a href={withBase('/')} class="eyebrow-link">← Return to research archive</a>
+      <div class="mt-14 grid gap-12 lg:grid-cols-[1fr_300px] lg:items-end">
+        <div>
+          <p class="section-kicker">Origin / Authorship / Method</p>
+          <h1 class="mt-6 max-w-[12ch] text-[clamp(3.6rem,10vw,8.6rem)] leading-[.87] font-medium tracking-[-.075em] text-zinc-100">Built to make the frontier inspectable.</h1>
+        </div>
+        <dl class="border-t border-white/10 pt-5 font-mono text-[10px] uppercase">
+          <div class="flex justify-between gap-5 border-b border-white/8 py-3"><dt class="text-zinc-700">Founder</dt><dd class="text-zinc-300">{CREATOR_NAME}</dd></div>
+          <div class="flex justify-between gap-5 border-b border-white/8 py-3"><dt class="text-zinc-700">Origin</dt><dd class="text-zinc-300">{COPYRIGHT_YEAR}</dd></div>
+          <div class="flex justify-between gap-5 py-3"><dt class="text-zinc-700">Status</dt><dd class="text-lime-300">Independent</dd></div>
+        </dl>
+      </div>
+    </div>
+  </header>
+
+  <section class="border-b border-white/10 px-5 py-16 md:px-8 md:py-24">
+    <div class="mx-auto grid max-w-[1480px] gap-14 lg:grid-cols-[.72fr_1.28fr] lg:gap-24">
+      <div>
+        <p class="section-kicker">01 / The archive</p>
+        <h2 class="mt-5 text-3xl font-medium tracking-[-.05em] text-zinc-200 md:text-5xl">A research instrument, not a content feed.</h2>
+      </div>
+      <div class="space-y-7 text-base leading-8 text-zinc-400">
+        <p>{SITE_MARK} is an independent engineering publication founded and created by {CREATOR_NAME}. It examines the physical systems that could expand humanity's access to energy, matter, computation, and habitable environments.</p>
+        <p>Each report is designed to expose the governing physics, operating envelope, evidence quality, industrial bottlenecks, and next tractable experiment. Reports are revised when better evidence changes the model.</p>
+        <p>Community members can challenge assumptions, propose investigations, and publish reproducible build logs. Final report authorship and publication remain under the archive's editorial control.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="border-b border-white/10 px-5 py-16 md:px-8 md:py-24">
+    <div class="mx-auto max-w-[1480px]">
+      <p class="section-kicker">02 / Provenance</p>
+      <div class="mt-8 grid gap-px bg-white/10 md:grid-cols-3">
+        <article class="bg-[#080a0a] p-7 md:p-9">
+          <span class="font-mono text-[9px] tracking-[.16em] text-zinc-700 uppercase">Named</span>
+          <h2 class="mt-10 text-xl font-medium tracking-[-.035em] text-zinc-300">Every report carries an author.</h2>
+          <p class="mt-4 text-sm leading-6 text-zinc-500">Publication dates, revision identifiers, rights holders, and canonical URLs travel with the work.</p>
+        </article>
+        <article class="bg-[#080a0a] p-7 md:p-9">
+          <span class="font-mono text-[9px] tracking-[.16em] text-zinc-700 uppercase">Versioned</span>
+          <h2 class="mt-10 text-xl font-medium tracking-[-.035em] text-zinc-300">The public record is preserved.</h2>
+          <p class="mt-4 text-sm leading-6 text-zinc-500">The repository history records the archive's development and the evolution of published analysis.</p>
+        </article>
+        <article class="bg-[#080a0a] p-7 md:p-9">
+          <span class="font-mono text-[9px] tracking-[.16em] text-zinc-700 uppercase">Correctable</span>
+          <h2 class="mt-10 text-xl font-medium tracking-[-.035em] text-zinc-300">Revision is part of authorship.</h2>
+          <p class="mt-4 text-sm leading-6 text-zinc-500">Technical critique is welcomed, recorded, and credited when it materially improves a report.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="px-5 py-16 md:px-8 md:py-24">
+    <div class="mx-auto grid max-w-[1480px] gap-12 lg:grid-cols-[1fr_1fr] lg:gap-24">
+      <div>
+        <p class="section-kicker">03 / Rights</p>
+        <h2 class="mt-5 text-3xl font-medium tracking-[-.05em] text-zinc-200 md:text-5xl">Credit is part of the architecture.</h2>
+      </div>
+      <div>
+        <p class="text-base leading-8 text-zinc-400">© {COPYRIGHT_YEAR} {CREATOR_NAME}. {SITE_MARK}, its original code, interface design, written reports, diagrams, and media are all rights reserved unless a specific notice states otherwise.</p>
+        <div class="mt-8 flex flex-wrap gap-5">
+          <a href={`${GITHUB_REPOSITORY_URL}/blob/main/LICENSE.md`} class="text-link">Read rights notice <span>↗</span></a>
+          <a href={`${GITHUB_REPOSITORY_URL}/blob/main/CONTRIBUTING.md`} class="text-link">Contribution terms <span>↗</span></a>
+          <a href={`${GITHUB_REPOSITORY_URL}/commits/main/`} class="text-link">Public history <span>↗</span></a>
+        </div>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

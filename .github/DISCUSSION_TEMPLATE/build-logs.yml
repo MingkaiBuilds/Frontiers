@@ -1,5 +1,9 @@
 title: "[Build Log] "
 body:
+  - type: markdown
+    attributes:
+      value: |
+        Submissions remain yours and are handled under the [Physical Extremes contribution terms](https://github.com/MingkaiBuilds/Frontiers/blob/main/CONTRIBUTING.md). Do not post confidential or third-party material without permission.
   - type: dropdown
     id: frontier
     attributes:
@@ -47,4 +51,3 @@ body:
     id: next
     attributes:
       label: Next iteration
-

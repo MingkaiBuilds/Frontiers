@@ -2,6 +2,8 @@
   "name": "physical-extremes",
   "version": "1.0.0",
   "private": true,
+  "author": "Mingkai",
+  "license": "UNLICENSED",
   "type": "module",
   "scripts": {
     "dev": "astro dev",

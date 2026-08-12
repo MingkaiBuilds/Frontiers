@@ -1,5 +1,9 @@
 title: "[Report Q&A] "
 body:
+  - type: markdown
+    attributes:
+      value: |
+        Submissions remain yours and are handled under the [Physical Extremes contribution terms](https://github.com/MingkaiBuilds/Frontiers/blob/main/CONTRIBUTING.md). Do not post confidential or third-party material without permission.
   - type: input
     id: report
     attributes:
@@ -25,4 +29,3 @@ body:
     attributes:
       label: Relevant evidence
       description: Optional primary sources, calculations, or comparable systems.
-

@@ -2,6 +2,8 @@
 
 A premium, static Astro research portfolio for long-form engineering reports across five physical frontiers. The project uses typed local Markdown/MDX, KaTeX, Tailwind CSS 4, and zero client-side JavaScript in the default page shell.
 
+Founded and created by **Mingkai** in 2026. Physical Extremes™ and the original code, design, reports, diagrams, and media in this repository are protected by copyright. All rights are reserved except where a third-party license or written permission expressly states otherwise. See [`LICENSE.md`](LICENSE.md), [`PROVENANCE.md`](PROVENANCE.md), and [`CONTRIBUTING.md`](CONTRIBUTING.md).
+
 ## Project structure
 
 ```text
@@ -9,6 +11,10 @@ physical-extremes/
 ├── public/
 │   ├── favicon.png
 │   └── og.png
+├── LICENSE.md
+├── PROVENANCE.md
+├── CITATION.cff
+├── CONTRIBUTING.md
 ├── src/
 │   ├── components/
 │   │   ├── FrontierCard.astro
@@ -25,6 +31,8 @@ physical-extremes/
 │   │   ├── ArticleLayout.astro
 │   │   └── BaseLayout.astro
 │   ├── pages/
+│   │   ├── about/
+│   │   │   └── index.astro
 │   │   ├── reports/
 │   │   │   └── [...slug].astro
 │   │   ├── studio/
@@ -75,7 +83,8 @@ published: 2026-08-11
 lastReviewed: 2026-08-11
 readingTime: "9 min"
 reportNo: "PX–SP–015"
-author: "Physical Extremes"
+author: "Mingkai"
+copyrightHolder: "Mingkai"
 revision: "1.0"
 difficulty: "Advanced"
 evidenceStatus: "Modeled"
