@@ -1,0 +1,32 @@
+---
+interface Props {
+  compact?: boolean;
+}
+
+const { compact = false } = Astro.props;
+import { withBase } from '@/utils/paths';
+---
+
+<header class:list={['site-header border-b border-white/10', compact && 'site-header--compact']}>
+  <div class="mx-auto flex max-w-[1480px] items-center justify-between gap-6 px-5 py-4 md:px-8">
+    <a href={withBase('/')} class="group flex min-w-0 items-center gap-3" aria-label="Physical Extremes home">
+      <span class="brand-mark" aria-hidden="true"><span></span></span>
+      <span class="truncate text-[11px] font-semibold tracking-[0.19em] text-white uppercase">
+        Physical Extremes
+      </span>
+    </a>
+
+    <nav class="hidden items-center gap-7 text-[10px] tracking-[0.16em] text-zinc-500 uppercase md:flex" aria-label="Primary navigation">
+      <a class="transition-colors hover:text-white" href={withBase('/#frontiers')}>Frontiers</a>
+      <a class="transition-colors hover:text-white" href={withBase('/#reports')}>Reports</a>
+      <a class="transition-colors hover:text-white" href={withBase('/#mission')}>Mission</a>
+      <a class="transition-colors hover:text-lime-300" href={withBase('/studio/')}>Write</a>
+    </nav>
+
+    <div class="flex items-center gap-2 text-[9px] tracking-[0.14em] text-zinc-500 uppercase">
+      <span class="h-1.5 w-1.5 rounded-full bg-lime-300 shadow-[0_0_12px_rgba(190,242,100,0.8)]"></span>
+      <span class="hidden sm:inline">Archive online</span>
+      <span class="sm:hidden">Online</span>
+    </div>
+  </div>
+</header>

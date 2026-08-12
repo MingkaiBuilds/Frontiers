@@ -1,0 +1,42 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import ReportStudio from '@/components/ReportStudio.astro';
+import { withBase } from '@/utils/paths';
+
+const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
+  (a, b) => a.data.published.valueOf() - b.data.published.valueOf(),
+);
+---
+
+<BaseLayout
+  title="Report Studio — Physical Extremes"
+  description="A native Markdown and LaTeX writing studio for Physical Extremes engineering reports."
+>
+  <header class="studio-hero border-b border-white/10">
+    <div class="mx-auto max-w-[1480px] px-5 py-12 md:px-8 md:py-16">
+      <a href={withBase('/')} class="eyebrow-link">← Return to research archive</a>
+      <div class="mt-10 grid gap-8 lg:grid-cols-[1fr_380px] lg:items-end">
+        <div>
+          <p class="section-kicker">Authoring system / Local-first</p>
+          <h1 class="mt-4 max-w-[14ch] text-[clamp(2.7rem,7vw,6.8rem)] leading-[.9] font-medium tracking-[-.065em] text-zinc-100">
+            Report writing studio.
+          </h1>
+        </div>
+        <div class="border-t border-white/10 pt-5">
+          <p class="text-sm leading-6 text-zinc-500">Compose Markdown, render LaTeX immediately, attach technical figures, and export a repository-ready report package. Drafts remain on this device.</p>
+          <div class="mt-5 flex items-center gap-3 font-mono text-[9px] tracking-[.14em] text-zinc-600 uppercase">
+            <span class="h-1.5 w-1.5 rounded-full bg-lime-300 shadow-[0_0_10px_#b8f45d]"></span>
+            No account · no upload · no token
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <section class="px-3 py-3 md:px-5 md:py-5">
+    <div class="mx-auto max-w-[1600px]">
+      <ReportStudio posts={posts} />
+    </div>
+  </section>
+</BaseLayout>

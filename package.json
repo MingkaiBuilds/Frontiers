@@ -1,0 +1,33 @@
+{
+  "name": "physical-extremes",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro check && astro build",
+    "preview": "astro preview",
+    "check": "astro check"
+  },
+  "dependencies": {
+    "@astrojs/markdown-remark": "latest",
+    "@astrojs/mdx": "latest",
+    "@tailwindcss/vite": "latest",
+    "astro": "latest",
+    "dompurify": "^3.4.13",
+    "fflate": "^0.8.3",
+    "katex": "latest",
+    "marked": "^18.0.9",
+    "marked-katex-extension": "^5.1.10",
+    "rehype-katex": "latest",
+    "remark-math": "latest",
+    "tailwindcss": "^4.3.3"
+  },
+  "devDependencies": {
+    "@astrojs/check": "latest",
+    "typescript": "latest"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  }
+}

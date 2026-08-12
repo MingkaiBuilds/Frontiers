@@ -1,0 +1,43 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { frontierByName } from '@/data/frontiers';
+import { withBase } from '@/utils/paths';
+
+interface Props {
+  post: CollectionEntry<'blog'>;
+  index: number;
+}
+
+const { post, index } = Astro.props;
+const frontier = frontierByName.get(post.data.frontier);
+const date = post.data.published.toLocaleDateString('en-US', {
+  month: 'short',
+  day: '2-digit',
+  year: 'numeric',
+  timeZone: 'UTC',
+});
+---
+
+<a
+  href={withBase(`/reports/${post.id}/`)}
+  class="report-row group grid gap-4 border-t border-white/10 py-5 transition-colors hover:bg-white/[0.025] md:grid-cols-[64px_1fr_190px_120px] md:items-center md:px-3"
+  style={`--frontier-color: ${frontier?.color ?? '#fff'}`}
+>
+  <span class="hidden font-mono text-[10px] text-zinc-700 md:block">{String(index + 1).padStart(2, '0')}</span>
+  <div>
+    <p class="mb-2 flex items-center gap-2 text-[9px] font-semibold tracking-[0.16em] text-zinc-500 uppercase md:hidden">
+      <span class="h-1.5 w-1.5 rounded-full bg-[var(--frontier-color)]"></span>{post.data.frontier}
+    </p>
+    <h3 class="text-base font-medium tracking-[-0.025em] text-zinc-200 transition-colors group-hover:text-white md:text-lg">
+      {post.data.title}
+    </h3>
+  </div>
+  <div class="hidden items-center gap-3 md:flex">
+    <span class="h-1.5 w-1.5 rounded-full bg-[var(--frontier-color)]"></span>
+    <span class="text-[10px] tracking-[0.11em] text-zinc-500 uppercase">{post.data.frontier}</span>
+  </div>
+  <div class="flex items-center justify-between gap-5 font-mono text-[9px] tracking-[0.1em] text-zinc-600 uppercase md:block">
+    <span>{date}</span>
+    <span class="md:hidden">{post.data.readingTime} →</span>
+  </div>
+</a>

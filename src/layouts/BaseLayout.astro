@@ -1,0 +1,61 @@
+---
+import '@/styles/global.css';
+import SiteHeader from '@/components/SiteHeader.astro';
+import { withBase } from '@/utils/paths';
+
+interface Props {
+  title?: string;
+  description?: string;
+  image?: string;
+  article?: boolean;
+}
+
+const {
+  title = 'Physical Extremes — Engineering the Five Great Frontiers',
+  description = 'Independent engineering reports on deep space, deep ocean, deep crust, fusion energy, and cryo-quantum infrastructure.',
+  image = withBase('/og.png'),
+  article = false,
+} = Astro.props;
+
+const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+const imageURL = new URL(image, Astro.site);
+---
+
+<!doctype html>
+<html lang="en" class="bg-[#070909] text-zinc-200">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+    <meta name="theme-color" content="#070909" />
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalURL} />
+    <link rel="icon" type="image/png" href={withBase('/favicon.png')} />
+
+    <meta property="og:type" content={article ? 'article' : 'website'} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:image" content={imageURL} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={imageURL} />
+
+    <title>{title}</title>
+  </head>
+  <body class="min-h-screen antialiased selection:bg-lime-300 selection:text-black">
+    <a class="skip-link" href="#main-content">Skip to content</a>
+    <div class="ambient-grid" aria-hidden="true"></div>
+    <SiteHeader compact={article} />
+    <main id="main-content">
+      <slot />
+    </main>
+    <footer class="border-t border-white/10">
+      <div class="mx-auto flex max-w-[1480px] flex-col gap-3 px-5 py-7 text-[9px] tracking-[0.15em] text-zinc-600 uppercase md:flex-row md:items-center md:justify-between md:px-8">
+        <p>© {new Date().getFullYear()} Physical Extremes / Independent field notes</p>
+        <p class="font-mono">Five frontiers · One industrial future</p>
+      </div>
+    </footer>
+  </body>
+</html>

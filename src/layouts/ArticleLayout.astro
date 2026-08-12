@@ -1,0 +1,101 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import BaseLayout from './BaseLayout.astro';
+import ReportGraph from '@/components/ReportGraph.astro';
+import { frontierByName } from '@/data/frontiers';
+import { withBase } from '@/utils/paths';
+
+interface Heading {
+  depth: number;
+  slug: string;
+  text: string;
+}
+
+interface Props {
+  post: CollectionEntry<'blog'>;
+  allPosts: CollectionEntry<'blog'>[];
+  headings: Heading[];
+}
+
+const { post, allPosts, headings } = Astro.props;
+const frontier = frontierByName.get(post.data.frontier);
+const date = post.data.published.toLocaleDateString('en-US', {
+  month: 'long',
+  day: 'numeric',
+  year: 'numeric',
+  timeZone: 'UTC',
+});
+const toc = headings.filter((heading) => heading.depth === 2 || heading.depth === 3);
+---
+
+<BaseLayout
+  title={`${post.data.title} — Physical Extremes`}
+  description={post.data.description}
+  article
+>
+  <article style={`--frontier-color: ${frontier?.color ?? '#b8f45d'}`}>
+    <header class="report-hero border-b border-white/10">
+      <div class="mx-auto max-w-[1480px] px-5 py-12 md:px-8 md:py-20">
+        <a href={withBase('/#reports')} class="eyebrow-link">← Return to report index</a>
+        <div class="mt-12 grid gap-10 lg:grid-cols-[1fr_290px] lg:gap-20">
+          <div class="max-w-5xl">
+            <div class="flex items-center gap-3 text-[10px] tracking-[0.17em] text-zinc-500 uppercase">
+              <span class="h-1.5 w-1.5 rounded-full bg-[var(--frontier-color)] shadow-[0_0_14px_var(--frontier-color)]"></span>
+              <span>{post.data.frontier}</span>
+              <span class="text-zinc-800">/</span>
+              <span>{post.data.reportNo}</span>
+            </div>
+            <h1 class="mt-6 max-w-[18ch] text-[clamp(2.6rem,7vw,6.6rem)] leading-[0.94] font-medium tracking-[-0.065em] text-zinc-100">
+              {post.data.title}
+            </h1>
+            <p class="mt-7 max-w-3xl text-base leading-7 text-zinc-400 md:text-lg md:leading-8">
+              {post.data.description}
+            </p>
+          </div>
+
+          <dl class="report-metadata self-end border-t border-white/10 pt-5 font-mono text-[10px]">
+            <div><dt>Published</dt><dd>{date}</dd></div>
+            <div><dt>Reading time</dt><dd>{post.data.readingTime}</dd></div>
+            <div><dt>Revision</dt><dd>{post.data.updated ? 'Updated' : 'Initial release'}</dd></div>
+            <div><dt>Format</dt><dd>Engineering brief</dd></div>
+          </dl>
+        </div>
+      </div>
+    </header>
+
+    <div class="mx-auto grid max-w-[1480px] gap-12 px-5 py-12 md:px-8 lg:grid-cols-[210px_minmax(0,760px)_1fr] lg:gap-14 lg:py-20">
+      <aside class="hidden lg:block">
+        <div class="sticky top-8">
+          <p class="mb-5 font-mono text-[9px] tracking-[0.18em] text-zinc-600 uppercase">On this page</p>
+          <nav aria-label="Table of contents">
+            <ol class="space-y-3 border-l border-white/10">
+              {toc.map((heading) => (
+                <li class:list={[heading.depth === 3 && 'pl-3']}>
+                  <a class="toc-link" href={`#${heading.slug}`}>{heading.text}</a>
+                </li>
+              ))}
+            </ol>
+          </nav>
+        </div>
+      </aside>
+
+      <div class="prose min-w-0">
+        <slot />
+      </div>
+
+      <aside class="hidden xl:block">
+        <div class="sticky top-24 ml-auto w-full max-w-[250px]">
+          <details class="path-tracker" open>
+            <summary>
+              <span>Learning path</span>
+              <span class="path-tracker__toggle" aria-hidden="true">±</span>
+            </summary>
+            <div class="path-tracker__body">
+              <ReportGraph posts={allPosts} currentId={post.id} compact />
+            </div>
+          </details>
+        </div>
+      </aside>
+    </div>
+  </article>
+</BaseLayout>

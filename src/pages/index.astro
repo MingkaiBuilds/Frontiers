@@ -1,0 +1,133 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import FrontierCard from '@/components/FrontierCard.astro';
+import ReportRow from '@/components/ReportRow.astro';
+import ReportGraph from '@/components/ReportGraph.astro';
+import { FRONTIERS } from '@/data/frontiers';
+
+const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
+  (a, b) => b.data.published.valueOf() - a.data.published.valueOf(),
+);
+---
+
+<BaseLayout>
+  <section class="hero-shell relative overflow-hidden border-b border-white/10">
+    <div class="mx-auto grid min-h-[720px] max-w-[1480px] px-5 md:px-8 lg:grid-cols-[1fr_240px]">
+      <div class="flex flex-col justify-between py-12 md:py-20 lg:border-r lg:border-white/10 lg:pr-16">
+        <div class="flex items-center gap-3 font-mono text-[9px] tracking-[0.2em] text-zinc-600 uppercase">
+          <span>Independent engineering archive</span>
+          <span class="h-px w-10 bg-zinc-800"></span>
+          <span>Est. 2026</span>
+        </div>
+
+        <div class="my-20">
+          <p class="mb-5 text-[11px] font-semibold tracking-[0.19em] text-lime-300 uppercase">Five frontiers. One mandate.</p>
+          <h1 class="max-w-[13ch] text-[clamp(3.8rem,10vw,9.8rem)] leading-[0.82] font-medium tracking-[-0.078em] text-zinc-100">
+            Engineer the impossible edge.
+          </h1>
+        </div>
+
+        <div class="grid gap-8 md:grid-cols-[minmax(0,620px)_1fr] md:items-end">
+          <p class="max-w-[60ch] text-base leading-7 text-zinc-400 md:text-lg md:leading-8">
+            A field guide to mastering the physical boundaries that keep energy, matter, and computation scarce. We trace the machines that can move civilization from extraction toward abundance—across vacuum, pressure, heat, plasma, and near-absolute zero.
+          </p>
+          <a href="#path-graph" class="text-link justify-self-start md:justify-self-end">Trace the path <span>↓</span></a>
+        </div>
+      </div>
+
+      <aside class="hidden py-20 pl-8 lg:flex lg:flex-col lg:justify-between" aria-label="Archive status">
+        <div class="orbital-glyph" aria-hidden="true">
+          <span class="orbital-glyph__axis"></span>
+          <span class="orbital-glyph__core"></span>
+        </div>
+        <dl class="space-y-7 border-t border-white/10 pt-6 font-mono text-[9px] tracking-[0.12em] uppercase">
+          <div><dt class="text-zinc-700">Domains</dt><dd class="mt-2 text-zinc-400">05 / Active</dd></div>
+          <div><dt class="text-zinc-700">Reports</dt><dd class="mt-2 text-zinc-400">{String(posts.length).padStart(2, '0')} / Indexed</dd></div>
+          <div><dt class="text-zinc-700">Signal</dt><dd class="mt-2 text-lime-300">Nominal</dd></div>
+        </dl>
+      </aside>
+    </div>
+  </section>
+
+  <section id="path-graph" class="scroll-mt-10 border-b border-white/10 px-5 py-16 md:px-8 md:py-24">
+    <div class="mx-auto max-w-[1480px]">
+      <div class="section-heading">
+        <div>
+          <p class="section-kicker">01 / Knowledge topology</p>
+          <h2>Navigate the dependency field</h2>
+        </div>
+        <p>Reports are linked by their prerequisite concepts. Trace a signal to see what each system inherits—and where that knowledge leads next.</p>
+      </div>
+      <div class="mt-10">
+        <ReportGraph posts={posts} />
+      </div>
+    </div>
+  </section>
+
+  <section id="frontiers" class="scroll-mt-10 border-b border-white/10 px-5 py-20 md:px-8 md:py-28">
+    <div class="mx-auto max-w-[1480px]">
+      <div class="section-heading">
+        <div>
+          <p class="section-kicker">02 / Research domains</p>
+          <h2>The five physical frontiers</h2>
+        </div>
+        <p>Each domain compresses a different failure mode. Together, they form the industrial stack for a post-scarcity civilization.</p>
+      </div>
+
+      <div class="mt-12 grid md:grid-cols-2 xl:grid-cols-5">
+        {FRONTIERS.map((frontier) => (
+          <FrontierCard
+            frontier={frontier}
+            post={posts.find((post) => post.data.frontier === frontier.name)}
+          />
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section id="mission" class="scroll-mt-10 border-b border-white/10 px-5 py-20 md:px-8 md:py-32">
+    <div class="mx-auto grid max-w-[1480px] gap-14 lg:grid-cols-[0.8fr_1.2fr] lg:gap-24">
+      <div>
+        <p class="section-kicker">03 / Grand objective</p>
+        <p class="mt-6 max-w-[24ch] text-3xl leading-[1.12] font-medium tracking-[-0.045em] text-zinc-200 md:text-5xl">
+          Scarcity is often an engineering constraint wearing the mask of a natural law.
+        </p>
+      </div>
+      <div class="grid gap-px bg-white/10 md:grid-cols-2">
+        <div class="bg-[#080a0a] p-7 md:p-9">
+          <p class="font-mono text-[9px] tracking-[0.16em] text-zinc-600 uppercase">Constraint</p>
+          <p class="mt-10 text-sm leading-6 text-zinc-400">Materials fail under combined pressure, radiation, temperature, vibration, and time.</p>
+        </div>
+        <div class="bg-[#080a0a] p-7 md:p-9">
+          <p class="font-mono text-[9px] tracking-[0.16em] text-zinc-600 uppercase">Response</p>
+          <p class="mt-10 text-sm leading-6 text-zinc-400">Design for envelopes, interfaces, maintenance, and industrial replication—not isolated records.</p>
+        </div>
+        <div class="bg-[#080a0a] p-7 md:p-9">
+          <p class="font-mono text-[9px] tracking-[0.16em] text-zinc-600 uppercase">Method</p>
+          <p class="mt-10 text-sm leading-6 text-zinc-400">Reduce frontier systems to testable physics, quantified bottlenecks, and credible deployment paths.</p>
+        </div>
+        <div class="bg-[#080a0a] p-7 md:p-9">
+          <p class="font-mono text-[9px] tracking-[0.16em] text-zinc-600 uppercase">Outcome</p>
+          <p class="mt-10 text-sm leading-6 text-zinc-400">Abundant energy, accessible resources, and computation that compounds scientific capability.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="reports" class="scroll-mt-10 px-5 py-20 md:px-8 md:py-28">
+    <div class="mx-auto max-w-[1480px]">
+      <div class="section-heading">
+        <div>
+          <p class="section-kicker">04 / Field reports</p>
+          <h2>Latest transmissions</h2>
+        </div>
+        <p>Dense, cited engineering analysis for readers who want the governing equation and the manufacturing consequence.</p>
+      </div>
+
+      <div class="mt-12 border-b border-white/10">
+        {posts.map((post, index) => <ReportRow post={post} index={index} />)}
+      </div>
+    </div>
+  </section>
+</BaseLayout>

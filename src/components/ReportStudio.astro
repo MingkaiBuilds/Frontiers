@@ -1,0 +1,613 @@
+---
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  posts: CollectionEntry<'blog'>[];
+}
+
+const { posts } = Astro.props;
+const today = new Date().toISOString().slice(0, 10);
+const starterBody = `## Governing constraint
+
+Begin with the physical limit. Inline mathematics uses $E = mc^2$.
+
+For a display equation, keep the delimiters on their own lines:
+
+$$
+\\mathcal{E}_{system} = \\bigcap_{i=1}^{n} \\mathcal{E}_i
+$$
+
+## Engineering response
+
+Explain the system architecture, assumptions, interfaces, and failure modes.
+
+- Quantify the operating envelope.
+- Separate demonstrated performance from projected performance.
+- Connect every metric to a design decision.
+
+> A useful report makes its uncertainty inspectable.
+
+## Deployment consequence
+
+Close with the manufacturing, maintenance, and infrastructure implications.`;
+---
+
+<div class="studio" data-report-studio>
+  <section class="studio-meta" aria-labelledby="studio-meta-title">
+    <div class="studio-panel-heading">
+      <div>
+        <p>Report manifest</p>
+        <h2 id="studio-meta-title">Document control</h2>
+      </div>
+      <span class="studio-state" data-draft-state>Draft local</span>
+    </div>
+
+    <div class="studio-fields">
+      <label class="studio-field studio-field--wide">
+        <span>Title</span>
+        <input name="title" type="text" value="Untitled engineering report" autocomplete="off" />
+      </label>
+      <label class="studio-field studio-field--wide">
+        <span>Abstract</span>
+        <textarea name="description" rows="2">State the governing constraint, engineering response, and deployment consequence.</textarea>
+      </label>
+      <label class="studio-field">
+        <span>Frontier</span>
+        <select name="frontier">
+          <option>Deep Space</option>
+          <option>Deep Ocean</option>
+          <option>Deep Crust</option>
+          <option>Fusion Energy</option>
+          <option>Cryo-Quantum Infrastructure</option>
+        </select>
+      </label>
+      <label class="studio-field">
+        <span>Published</span>
+        <input name="published" type="date" value={today} />
+      </label>
+      <label class="studio-field">
+        <span>Report number</span>
+        <input name="reportNo" type="text" value="PX–SP–001" autocomplete="off" />
+      </label>
+      <label class="studio-field">
+        <span>Reading time</span>
+        <input name="readingTime" type="text" value="8 min" autocomplete="off" />
+      </label>
+      <label class="studio-field studio-field--wide">
+        <span>File slug</span>
+        <div class="slug-control">
+          <code data-slug-prefix>deep-space/</code>
+          <input name="slug" type="text" value="untitled-engineering-report" autocomplete="off" spellcheck="false" />
+        </div>
+      </label>
+      <label class="studio-field studio-field--wide">
+        <span>Prerequisites</span>
+        <select name="prerequisites" multiple size="4" aria-describedby="prerequisites-hint">
+          {posts.map((post) => <option value={post.id}>{post.data.reportNo} / {post.data.title}</option>)}
+        </select>
+        <small id="prerequisites-hint">Hold Command or Control to select multiple reports.</small>
+      </label>
+    </div>
+  </section>
+
+  <section class="studio-workspace" aria-labelledby="studio-editor-title">
+    <div class="studio-toolbar" role="toolbar" aria-label="Markdown and LaTeX formatting">
+      <div class="studio-toolbar__identity">
+        <p>Source editor</p>
+        <h2 id="studio-editor-title">Markdown + LaTeX</h2>
+      </div>
+      <div class="studio-tools">
+        <button type="button" data-insert="heading" title="Section heading">H2</button>
+        <button type="button" data-insert="bold" title="Bold">B</button>
+        <button type="button" data-insert="italic" title="Italic">I</button>
+        <button type="button" data-insert="inline-math" title="Inline equation">$x$</button>
+        <button type="button" data-insert="block-math" title="Display equation">$$</button>
+        <button type="button" data-insert="code" title="Code block">{`</>`}</button>
+        <button type="button" data-insert="table" title="Table">▦</button>
+        <button type="button" data-insert="quote" title="Callout">❯</button>
+        <button type="button" data-open-images title="Import images">IMAGE +</button>
+      </div>
+      <div class="studio-view-toggle" role="group" aria-label="Workspace view">
+        <button type="button" data-view="source" aria-pressed="false">Source</button>
+        <button type="button" data-view="split" aria-pressed="true">Split</button>
+        <button type="button" data-view="preview" aria-pressed="false">Preview</button>
+      </div>
+    </div>
+
+    <div class="studio-split" data-studio-split data-view="split">
+      <div class="source-pane">
+        <div class="pane-label"><span>REPORT.MD</span><span data-word-count>0 words</span></div>
+        <textarea
+          class="source-editor"
+          name="body"
+          aria-label="Report Markdown and LaTeX source"
+          spellcheck="true"
+        >{starterBody}</textarea>
+      </div>
+
+      <div class="preview-pane">
+        <div class="pane-label"><span>RENDERED OUTPUT</span><span data-render-state>KaTeX ready</span></div>
+        <article class="studio-preview prose" data-preview aria-live="polite"></article>
+      </div>
+    </div>
+  </section>
+
+  <section class="studio-assets" aria-labelledby="studio-assets-title">
+    <div class="studio-panel-heading">
+      <div>
+        <p>Figure intake</p>
+        <h2 id="studio-assets-title">Report images</h2>
+      </div>
+      <span data-image-count>0 assets</span>
+    </div>
+
+    <input data-image-input type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple hidden />
+    <button type="button" class="image-dropzone" data-image-dropzone>
+      <span class="image-dropzone__mark" aria-hidden="true">＋</span>
+      <strong>Drop technical figures here</strong>
+      <span>PNG, JPEG, WebP, or GIF · stored beside the exported report</span>
+    </button>
+    <div class="asset-grid" data-asset-grid></div>
+  </section>
+
+  <section class="studio-output" aria-labelledby="studio-output-title">
+    <div>
+      <p>Repository output</p>
+      <h2 id="studio-output-title">Package the report</h2>
+      <p class="studio-output__copy">The ZIP preserves the exact <code>src/content/blog/</code> and <code>public/images/reports/</code> paths expected by this website.</p>
+    </div>
+    <div class="studio-output__actions">
+      <button type="button" class="button-secondary" data-copy-source>Copy source</button>
+      <button type="button" class="button-secondary" data-download-markdown>Download .md</button>
+      <button type="button" class="button-primary" data-download-package>Download report package</button>
+    </div>
+  </section>
+
+  <div class="studio-toast" data-toast role="status" aria-live="polite"></div>
+</div>
+
+<script>
+  import DOMPurify from 'dompurify';
+  import { marked } from 'marked';
+  import markedKatex from 'marked-katex-extension';
+  import { strToU8, zipSync } from 'fflate';
+
+  const STUDIO_STORAGE_KEY = 'physical-extremes:report-studio:v1';
+  const IMAGE_DATABASE = 'physical-extremes-studio';
+  const IMAGE_STORE = 'images';
+  const frontierFolders: Record<string, string> = {
+    'Deep Space': 'deep-space',
+    'Deep Ocean': 'deep-ocean',
+    'Deep Crust': 'deep-crust',
+    'Fusion Energy': 'fusion',
+    'Cryo-Quantum Infrastructure': 'cryo-quantum',
+  };
+
+  marked.use(markedKatex({ throwOnError: false, nonStandard: true }));
+  marked.setOptions({ gfm: true, breaks: false });
+
+  type StoredImage = {
+    id: string;
+    name: string;
+    type: string;
+    bytes: ArrayBuffer;
+  };
+
+  type StudioImage = StoredImage & {
+    previewUrl: string;
+  };
+
+  document.querySelectorAll<HTMLElement>('[data-report-studio]').forEach((studio) => {
+    const field = <T extends HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(name: string) =>
+      studio.querySelector<T>(`[name="${name}"]`)!;
+    const title = field<HTMLInputElement>('title');
+    const description = field<HTMLTextAreaElement>('description');
+    const frontier = field<HTMLSelectElement>('frontier');
+    const published = field<HTMLInputElement>('published');
+    const reportNo = field<HTMLInputElement>('reportNo');
+    const readingTime = field<HTMLInputElement>('readingTime');
+    const slug = field<HTMLInputElement>('slug');
+    const prerequisites = field<HTMLSelectElement>('prerequisites');
+    const editor = field<HTMLTextAreaElement>('body');
+    const preview = studio.querySelector<HTMLElement>('[data-preview]')!;
+    const assetGrid = studio.querySelector<HTMLElement>('[data-asset-grid]')!;
+    const imageInput = studio.querySelector<HTMLInputElement>('[data-image-input]')!;
+    const dropzone = studio.querySelector<HTMLButtonElement>('[data-image-dropzone]')!;
+    const images = new Map<string, StudioImage>();
+    let autoSlug = true;
+    let renderFrame = 0;
+    let saveTimer = 0;
+
+    const slugify = (value: string) => value
+      .toLowerCase()
+      .normalize('NFKD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 72) || 'untitled-report';
+
+    const safeFileName = (value: string) => {
+      const dot = value.lastIndexOf('.');
+      const extension = dot > -1 ? value.slice(dot).toLowerCase().replace(/[^.a-z0-9]/g, '') : '';
+      return `${slugify(dot > -1 ? value.slice(0, dot) : value)}${extension}`;
+    };
+
+    const escapeYaml = (value: string) => JSON.stringify(value.trim());
+    const selectedPrerequisites = () => [...prerequisites.selectedOptions].map((option) => option.value);
+    const reportFolder = () => frontierFolders[frontier.value] ?? 'deep-space';
+    const imagePublicPath = (name: string) => `/images/reports/${slugify(slug.value)}/${name}`;
+
+    const buildSource = () => {
+      const prerequisiteLines = selectedPrerequisites();
+      const prerequisiteYaml = prerequisiteLines.length
+        ? `\n${prerequisiteLines.map((id) => `  - ${escapeYaml(id)}`).join('\n')}`
+        : ' []';
+
+      return `---\n` +
+        `title: ${escapeYaml(title.value)}\n` +
+        `description: ${escapeYaml(description.value)}\n` +
+        `frontier: ${escapeYaml(frontier.value)}\n` +
+        `published: ${published.value}\n` +
+        `readingTime: ${escapeYaml(readingTime.value)}\n` +
+        `reportNo: ${escapeYaml(reportNo.value)}\n` +
+        `prerequisites:${prerequisiteYaml}\n` +
+        `featured: false\n` +
+        `---\n\n${editor.value.trim()}\n`;
+    };
+
+    const showToast = (message: string) => {
+      const toast = studio.querySelector<HTMLElement>('[data-toast]')!;
+      toast.textContent = message;
+      toast.classList.add('is-visible');
+      window.setTimeout(() => toast.classList.remove('is-visible'), 2600);
+    };
+
+    const downloadBlob = (blob: Blob, filename: string) => {
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = filename;
+      document.body.append(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(url);
+    };
+
+    const updateManifest = () => {
+      studio.querySelector<HTMLElement>('[data-slug-prefix]')!.textContent = `${reportFolder()}/`;
+      const wordCount = editor.value.trim() ? editor.value.trim().split(/\s+/).length : 0;
+      studio.querySelector<HTMLElement>('[data-word-count]')!.textContent = `${wordCount} words`;
+    };
+
+    const previewSource = () => {
+      let source = editor.value;
+      for (const image of images.values()) {
+        source = source.replaceAll(imagePublicPath(image.name), image.previewUrl);
+      }
+      return source;
+    };
+
+    const renderPreview = () => {
+      cancelAnimationFrame(renderFrame);
+      renderFrame = requestAnimationFrame(async () => {
+        try {
+          const html = await marked.parse(previewSource());
+          preview.innerHTML = DOMPurify.sanitize(html, { ADD_ATTR: ['target'] });
+          preview.querySelectorAll('img').forEach((image) => {
+            const figure = document.createElement('figure');
+            figure.className = 'technical-figure';
+            const caption = document.createElement('figcaption');
+            caption.textContent = image.alt || 'Technical figure';
+            image.replaceWith(figure);
+            figure.append(image, caption);
+          });
+          studio.querySelector<HTMLElement>('[data-render-state]')!.textContent = 'KaTeX ready';
+        } catch (error) {
+          studio.querySelector<HTMLElement>('[data-render-state]')!.textContent = 'Source error';
+          preview.innerHTML = `<p>Preview could not render. Check the most recent Markdown or LaTeX expression.</p>`;
+        }
+        updateManifest();
+      });
+    };
+
+    const draftData = () => ({
+      title: title.value,
+      description: description.value,
+      frontier: frontier.value,
+      published: published.value,
+      reportNo: reportNo.value,
+      readingTime: readingTime.value,
+      slug: slug.value,
+      prerequisites: selectedPrerequisites(),
+      body: editor.value,
+    });
+
+    const saveDraft = () => {
+      window.clearTimeout(saveTimer);
+      studio.querySelector<HTMLElement>('[data-draft-state]')!.textContent = 'Saving…';
+      saveTimer = window.setTimeout(() => {
+        localStorage.setItem(STUDIO_STORAGE_KEY, JSON.stringify(draftData()));
+        studio.querySelector<HTMLElement>('[data-draft-state]')!.textContent = 'Saved locally';
+      }, 350);
+    };
+
+    const restoreDraft = () => {
+      try {
+        const saved = JSON.parse(localStorage.getItem(STUDIO_STORAGE_KEY) ?? 'null');
+        if (!saved) return;
+        title.value = saved.title ?? title.value;
+        description.value = saved.description ?? description.value;
+        frontier.value = saved.frontier ?? frontier.value;
+        published.value = saved.published ?? published.value;
+        reportNo.value = saved.reportNo ?? reportNo.value;
+        readingTime.value = saved.readingTime ?? readingTime.value;
+        slug.value = saved.slug ?? slug.value;
+        editor.value = saved.body ?? editor.value;
+        const selected = new Set<string>(saved.prerequisites ?? []);
+        [...prerequisites.options].forEach((option) => { option.selected = selected.has(option.value); });
+        autoSlug = false;
+      } catch {
+        localStorage.removeItem(STUDIO_STORAGE_KEY);
+      }
+    };
+
+    const openImageDatabase = () => new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open(IMAGE_DATABASE, 1);
+      request.onupgradeneeded = () => {
+        if (!request.result.objectStoreNames.contains(IMAGE_STORE)) {
+          request.result.createObjectStore(IMAGE_STORE, { keyPath: 'id' });
+        }
+      };
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+
+    const persistImage = async (image: StoredImage) => {
+      const database = await openImageDatabase();
+      const transaction = database.transaction(IMAGE_STORE, 'readwrite');
+      transaction.objectStore(IMAGE_STORE).put(image);
+      transaction.oncomplete = () => database.close();
+    };
+
+    const deleteStoredImage = async (id: string) => {
+      const database = await openImageDatabase();
+      const transaction = database.transaction(IMAGE_STORE, 'readwrite');
+      transaction.objectStore(IMAGE_STORE).delete(id);
+      transaction.oncomplete = () => database.close();
+    };
+
+    const readStoredImages = async () => {
+      try {
+        const database = await openImageDatabase();
+        const request = database.transaction(IMAGE_STORE).objectStore(IMAGE_STORE).getAll();
+        const stored = await new Promise<StoredImage[]>((resolve, reject) => {
+          request.onsuccess = () => resolve(request.result);
+          request.onerror = () => reject(request.error);
+        });
+        database.close();
+        stored.forEach(addImageToSession);
+      } catch {
+        showToast('Image draft storage is unavailable in this browser.');
+      }
+    };
+
+    const addImageToSession = (stored: StoredImage) => {
+      const previous = images.get(stored.id);
+      if (previous) URL.revokeObjectURL(previous.previewUrl);
+      images.set(stored.id, {
+        ...stored,
+        previewUrl: URL.createObjectURL(new Blob([stored.bytes], { type: stored.type })),
+      });
+      renderAssets();
+      renderPreview();
+    };
+
+    const insertAtSelection = (before: string, after = '', fallback = '') => {
+      const start = editor.selectionStart;
+      const end = editor.selectionEnd;
+      const selected = editor.value.slice(start, end) || fallback;
+      editor.setRangeText(`${before}${selected}${after}`, start, end, 'end');
+      editor.focus();
+      editor.dispatchEvent(new Event('input', { bubbles: true }));
+    };
+
+    const insertImage = (image: StudioImage) => {
+      const alt = image.name.replace(/[-_]/g, ' ').replace(/\.[^.]+$/, '');
+      insertAtSelection(`\n![${alt}](${imagePublicPath(image.name)})\n`);
+      showToast('Figure reference inserted at the cursor.');
+    };
+
+    const renderAssets = () => {
+      assetGrid.replaceChildren();
+      for (const image of images.values()) {
+        const card = document.createElement('article');
+        card.className = 'asset-card';
+        card.innerHTML = `
+          <img alt="" src="${image.previewUrl}">
+          <div><strong></strong><span></span></div>
+          <div class="asset-card__actions">
+            <button type="button" data-insert-asset>Insert</button>
+            <button type="button" data-remove-asset aria-label="Remove image">×</button>
+          </div>`;
+        card.querySelector('strong')!.textContent = image.name;
+        card.querySelector('span')!.textContent = `${Math.max(1, Math.round(image.bytes.byteLength / 1024))} KB`;
+        card.querySelector<HTMLButtonElement>('[data-insert-asset]')!.onclick = () => insertImage(image);
+        card.querySelector<HTMLButtonElement>('[data-remove-asset]')!.onclick = async () => {
+          URL.revokeObjectURL(image.previewUrl);
+          images.delete(image.id);
+          await deleteStoredImage(image.id);
+          renderAssets();
+          renderPreview();
+        };
+        assetGrid.append(card);
+      }
+      studio.querySelector<HTMLElement>('[data-image-count]')!.textContent = `${images.size} ${images.size === 1 ? 'asset' : 'assets'}`;
+    };
+
+    const acceptFiles = async (files: FileList | File[]) => {
+      const accepted = [...files].filter((file) => /^image\/(png|jpeg|webp|gif)$/.test(file.type));
+      for (const file of accepted) {
+        const name = safeFileName(file.name);
+        const stored: StoredImage = {
+          id: name,
+          name,
+          type: file.type,
+          bytes: await file.arrayBuffer(),
+        };
+        addImageToSession(stored);
+        await persistImage(stored);
+      }
+      if (accepted.length) showToast(`${accepted.length} figure${accepted.length === 1 ? '' : 's'} imported.`);
+    };
+
+    const formatting: Record<string, () => void> = {
+      heading: () => insertAtSelection('\n## ', '\n', 'Section title'),
+      bold: () => insertAtSelection('**', '**', 'important statement'),
+      italic: () => insertAtSelection('*', '*', 'emphasis'),
+      'inline-math': () => insertAtSelection('$', '$', 'E = mc^2'),
+      'block-math': () => insertAtSelection('\n$$\n', '\n$$\n', '\\sum_{i=1}^{n} x_i'),
+      code: () => insertAtSelection('\n```ts\n', '\n```\n', 'const envelope = { verified: true };'),
+      table: () => insertAtSelection('\n| Variable | Value | Unit |\n|---|---:|---|\n| ', ' |\n', 'Pressure | 110 | MPa'),
+      quote: () => insertAtSelection('\n> ', '\n', 'State the design consequence.'),
+    };
+
+    studio.querySelectorAll<HTMLButtonElement>('[data-insert]').forEach((button) => {
+      button.addEventListener('click', () => formatting[button.dataset.insert ?? '']?.());
+    });
+    studio.querySelectorAll<HTMLButtonElement>('[data-open-images]').forEach((button) => {
+      button.addEventListener('click', () => imageInput.click());
+    });
+    studio.querySelectorAll<HTMLButtonElement>('[data-view]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const view = button.dataset.view ?? 'split';
+        studio.querySelector<HTMLElement>('[data-studio-split]')!.dataset.view = view;
+        studio.querySelectorAll<HTMLButtonElement>('[data-view]').forEach((item) => {
+          item.setAttribute('aria-pressed', String(item === button));
+        });
+      });
+    });
+
+    imageInput.addEventListener('change', () => imageInput.files && acceptFiles(imageInput.files));
+    dropzone.addEventListener('click', () => imageInput.click());
+    dropzone.addEventListener('dragover', (event) => { event.preventDefault(); dropzone.classList.add('is-dragging'); });
+    dropzone.addEventListener('dragleave', () => dropzone.classList.remove('is-dragging'));
+    dropzone.addEventListener('drop', (event) => {
+      event.preventDefault();
+      dropzone.classList.remove('is-dragging');
+      if (event.dataTransfer?.files) acceptFiles(event.dataTransfer.files);
+    });
+
+    slug.addEventListener('input', () => { autoSlug = false; slug.value = slugify(slug.value); updateManifest(); });
+    title.addEventListener('input', () => { if (autoSlug) slug.value = slugify(title.value); });
+    [title, description, frontier, published, reportNo, readingTime, prerequisites, editor].forEach((element) => {
+      element.addEventListener('input', () => { renderPreview(); saveDraft(); });
+      element.addEventListener('change', () => { renderPreview(); saveDraft(); });
+    });
+
+    studio.querySelector<HTMLButtonElement>('[data-copy-source]')!.addEventListener('click', async () => {
+      await navigator.clipboard.writeText(buildSource());
+      showToast('Report source copied.');
+    });
+
+    studio.querySelector<HTMLButtonElement>('[data-download-markdown]')!.addEventListener('click', () => {
+      downloadBlob(new Blob([buildSource()], { type: 'text/markdown;charset=utf-8' }), `${slugify(slug.value)}.md`);
+    });
+
+    studio.querySelector<HTMLButtonElement>('[data-download-package]')!.addEventListener('click', () => {
+      const reportSlug = slugify(slug.value);
+      const reportPath = `src/content/blog/${reportFolder()}/${reportSlug}.md`;
+      const files: Record<string, Uint8Array> = { [reportPath]: strToU8(buildSource()) };
+      for (const image of images.values()) {
+        files[`public/images/reports/${reportSlug}/${image.name}`] = new Uint8Array(image.bytes);
+      }
+      files['IMPORT.txt'] = strToU8(
+        `PHYSICAL EXTREMES / REPORT PACKAGE\n\nCopy the src/ and public/ folders into the repository root.\nReport: ${reportPath}\nImages: public/images/reports/${reportSlug}/\n\nCommit and push to main to publish through GitHub Pages.\n`,
+      );
+      downloadBlob(new Blob([zipSync(files, { level: 6 })], { type: 'application/zip' }), `${reportSlug}-report-package.zip`);
+      showToast('Repository-ready report package downloaded.');
+    });
+
+    editor.addEventListener('keydown', (event) => {
+      if ((event.metaKey || event.ctrlKey) && event.key === 's') {
+        event.preventDefault();
+        saveDraft();
+        showToast('Draft saved in this browser.');
+      }
+      if (event.key === 'Tab') {
+        event.preventDefault();
+        editor.setRangeText('  ', editor.selectionStart, editor.selectionEnd, 'end');
+      }
+    });
+
+    restoreDraft();
+    readStoredImages();
+    renderPreview();
+  });
+</script>
+
+<style>
+  .studio { display: grid; gap: 1px; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.1); }
+  .studio > section { min-width: 0; background: #080a0a; }
+  .studio-meta, .studio-assets, .studio-output { padding: 1.25rem; }
+  .studio-panel-heading, .studio-output { display: flex; justify-content: space-between; align-items: flex-start; gap: 1.5rem; }
+  .studio-panel-heading p, .studio-toolbar__identity p, .studio-output > div > p:first-child { margin: 0 0 .4rem; color: #52525b; font-family: var(--font-mono); font-size: .52rem; letter-spacing: .16em; text-transform: uppercase; }
+  .studio-panel-heading h2, .studio-toolbar__identity h2, .studio-output h2 { margin: 0; color: #d4d4d8; font-size: .92rem; font-weight: 600; letter-spacing: -.02em; }
+  .studio-panel-heading > span, .studio-state { color: #71717a; font-family: var(--font-mono); font-size: .53rem; letter-spacing: .12em; text-transform: uppercase; }
+  .studio-state::before { content: ''; display: inline-block; width: 5px; height: 5px; margin-right: .4rem; border-radius: 50%; background: #b8f45d; box-shadow: 0 0 8px #b8f45d; }
+  .studio-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .8rem; margin-top: 1.25rem; }
+  .studio-field { display: grid; gap: .45rem; }
+  .studio-field--wide { grid-column: 1 / -1; }
+  .studio-field > span { color: #52525b; font-family: var(--font-mono); font-size: .52rem; letter-spacing: .13em; text-transform: uppercase; }
+  .studio-field small { color: #3f3f46; font-size: .62rem; line-height: 1.5; }
+  .studio-field input, .studio-field textarea, .studio-field select { width: 100%; border: 1px solid rgba(255,255,255,.1); border-radius: 0; outline: none; background: #0d1010; padding: .72rem .78rem; color: #a1a1aa; font: inherit; font-size: .72rem; line-height: 1.5; }
+  .studio-field input:focus, .studio-field textarea:focus, .studio-field select:focus { border-color: #71717a; color: #e4e4e7; }
+  .studio-field select[multiple] { min-height: 6.8rem; }
+  .slug-control { display: grid; grid-template-columns: auto 1fr; align-items: center; border: 1px solid rgba(255,255,255,.1); background: #0d1010; }
+  .slug-control code { padding-left: .75rem; color: #52525b; font-size: .66rem; }
+  .slug-control input { border: 0; padding-left: .15rem; }
+  .studio-workspace { min-height: 650px; }
+  .studio-toolbar { display: grid; grid-template-columns: 180px 1fr auto; align-items: center; gap: 1rem; border-bottom: 1px solid rgba(255,255,255,.1); padding: .75rem 1rem; }
+  .studio-tools, .studio-view-toggle { display: flex; flex-wrap: wrap; gap: .3rem; }
+  .studio-tools button, .studio-view-toggle button { min-width: 2rem; border: 1px solid rgba(255,255,255,.1); background: #0d1010; padding: .45rem .55rem; color: #71717a; font-family: var(--font-mono); font-size: .56rem; cursor: pointer; }
+  .studio-tools button:hover, .studio-tools button:focus-visible, .studio-view-toggle button:hover, .studio-view-toggle button:focus-visible, .studio-view-toggle button[aria-pressed="true"] { border-color: #71717a; color: #d4d4d8; }
+  .studio-view-toggle { justify-content: flex-end; }
+  .studio-split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); min-height: 590px; }
+  .source-pane, .preview-pane { min-width: 0; display: grid; grid-template-rows: auto 1fr; }
+  .source-pane { border-right: 1px solid rgba(255,255,255,.1); }
+  .pane-label { display: flex; justify-content: space-between; padding: .55rem .85rem; border-bottom: 1px solid rgba(255,255,255,.08); color: #3f3f46; font-family: var(--font-mono); font-size: .5rem; letter-spacing: .13em; }
+  .source-editor { width: 100%; min-height: 590px; resize: vertical; border: 0; outline: none; background: #090b0b; padding: 1.35rem; color: #a1a1aa; caret-color: #b8f45d; font-family: var(--font-mono); font-size: .76rem; line-height: 1.78; tab-size: 2; }
+  .source-editor:focus { box-shadow: inset 0 0 0 1px rgba(184,244,93,.24); }
+  .studio-preview { overflow: auto; max-height: 760px; padding: 1.35rem 1.6rem 4rem; }
+  .studio-split[data-view="source"] { grid-template-columns: 1fr; }
+  .studio-split[data-view="source"] .preview-pane { display: none; }
+  .studio-split[data-view="preview"] { grid-template-columns: 1fr; }
+  .studio-split[data-view="preview"] .source-pane { display: none; }
+  .image-dropzone { display: grid; place-items: center; width: 100%; margin-top: 1.2rem; border: 1px dashed #3f3f46; background: #0a0c0c; padding: 2rem 1rem; color: #71717a; cursor: pointer; }
+  .image-dropzone:hover, .image-dropzone:focus-visible, .image-dropzone.is-dragging { border-color: #b8f45d; background: rgba(184,244,93,.025); }
+  .image-dropzone__mark { color: #b8f45d; font-size: 1.4rem; }
+  .image-dropzone strong { margin-top: .65rem; color: #a1a1aa; font-size: .72rem; font-weight: 600; }
+  .image-dropzone span:last-child { margin-top: .35rem; font-family: var(--font-mono); font-size: .52rem; }
+  .asset-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: .7rem; margin-top: .8rem; }
+  .asset-card { display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; align-items: center; gap: .65rem; border: 1px solid rgba(255,255,255,.08); padding: .45rem; background: #0b0e0e; }
+  .asset-card img { width: 52px; height: 42px; object-fit: cover; }
+  .asset-card > div:not(.asset-card__actions) { min-width: 0; display: grid; gap: .2rem; }
+  .asset-card strong { overflow: hidden; color: #a1a1aa; font-size: .6rem; text-overflow: ellipsis; white-space: nowrap; }
+  .asset-card span { color: #3f3f46; font-family: var(--font-mono); font-size: .48rem; }
+  .asset-card__actions { display: flex; gap: .2rem; }
+  .asset-card button { border: 0; background: transparent; padding: .35rem; color: #52525b; font-family: var(--font-mono); font-size: .52rem; cursor: pointer; }
+  .asset-card button:hover { color: #d9f99d; }
+  .studio-output { align-items: center; }
+  .studio-output__copy { max-width: 68ch; margin: .7rem 0 0; color: #52525b; font-size: .66rem; line-height: 1.6; }
+  .studio-output__copy code { color: #71717a; }
+  .studio-output__actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .5rem; }
+  .button-secondary, .button-primary { border: 1px solid #3f3f46; padding: .7rem .85rem; font-family: var(--font-mono); font-size: .54rem; letter-spacing: .08em; text-transform: uppercase; cursor: pointer; }
+  .button-secondary { background: transparent; color: #71717a; }
+  .button-primary { border-color: #b8f45d; background: #b8f45d; color: #0a0c0c; font-weight: 700; }
+  .button-secondary:hover { border-color: #a1a1aa; color: #e4e4e7; }
+  .button-primary:hover { background: #d9f99d; }
+  .studio-toast { position: fixed; z-index: 100; right: 1rem; bottom: 1rem; transform: translateY(1rem); opacity: 0; border: 1px solid #3f3f46; background: #0a0c0c; padding: .8rem 1rem; color: #a1a1aa; font-family: var(--font-mono); font-size: .58rem; pointer-events: none; transition: opacity .18s, transform .18s; }
+  .studio-toast.is-visible { opacity: 1; transform: translateY(0); }
+  @media (min-width: 1080px) { .studio { grid-template-columns: 280px minmax(0, 1fr); } .studio-meta { grid-column: 1; grid-row: 1 / span 2; } .studio-workspace { grid-column: 2; grid-row: 1 / span 2; } .studio-assets, .studio-output { grid-column: 1 / -1; } }
+  @media (max-width: 820px) { .studio-toolbar { grid-template-columns: 1fr; } .studio-view-toggle { justify-content: flex-start; } .studio-split { grid-template-columns: 1fr; } .source-pane { border-right: 0; border-bottom: 1px solid rgba(255,255,255,.1); } .studio-split[data-view="split"] .source-editor { min-height: 420px; } .studio-split[data-view="split"] .studio-preview { max-height: none; } .studio-output { align-items: flex-start; flex-direction: column; } .studio-output__actions { justify-content: flex-start; } }
+  @media (max-width: 520px) { .studio-fields { grid-template-columns: 1fr; } .studio-field--wide { grid-column: auto; } .studio-panel-heading { flex-direction: column; gap: .7rem; } }
+</style>

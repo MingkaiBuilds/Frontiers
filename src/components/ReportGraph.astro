@@ -1,0 +1,389 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { frontierByName } from '@/data/frontiers';
+import { withBase } from '@/utils/paths';
+
+interface Props {
+  posts: CollectionEntry<'blog'>[];
+  currentId?: string;
+  compact?: boolean;
+}
+
+interface GraphNode {
+  id: string;
+  title: string;
+  reportNo: string;
+  frontier: string;
+  color: string;
+  href: string;
+  depth: number;
+  x: number;
+  y: number;
+  lines: string[];
+}
+
+const { posts, currentId, compact = false } = Astro.props;
+const postById = new Map(posts.map((post) => [post.id, post]));
+const depthCache = new Map<string, number>();
+
+// Calculate a deterministic topological depth and fail the build for invalid
+// references or circular curricula. Broken learning paths should never ship.
+function getDepth(id: string, ancestry = new Set<string>()): number {
+  const cached = depthCache.get(id);
+  if (cached !== undefined) return cached;
+  if (ancestry.has(id)) throw new Error(`Circular report prerequisite detected at "${id}".`);
+
+  const post = postById.get(id);
+  if (!post) throw new Error(`Unknown report prerequisite "${id}".`);
+
+  const nextAncestry = new Set(ancestry).add(id);
+  const prerequisiteDepths = post.data.prerequisites.map((prerequisiteId) => {
+    if (!postById.has(prerequisiteId)) {
+      throw new Error(`Report "${id}" references missing prerequisite "${prerequisiteId}".`);
+    }
+    return getDepth(prerequisiteId, nextAncestry);
+  });
+  const depth = prerequisiteDepths.length ? Math.max(...prerequisiteDepths) + 1 : 0;
+  depthCache.set(id, depth);
+  return depth;
+}
+
+function wrapTitle(title: string, maxCharacters = 25): string[] {
+  const words = title.split(' ');
+  const lines: string[] = [];
+
+  for (const word of words) {
+    const last = lines.at(-1);
+    if (!last || `${last} ${word}`.length > maxCharacters) lines.push(word);
+    else lines[lines.length - 1] = `${last} ${word}`;
+  }
+
+  if (lines.length > 2) return [lines[0], `${lines[1]}…`];
+  return lines;
+}
+
+const orderedPosts = [...posts].sort((a, b) => {
+  const depthDifference = getDepth(a.id) - getDepth(b.id);
+  return depthDifference || a.data.published.valueOf() - b.data.published.valueOf();
+});
+const maxDepth = Math.max(1, ...orderedPosts.map((post) => getDepth(post.id)));
+const groups = new Map<number, CollectionEntry<'blog'>[]>();
+
+for (const post of orderedPosts) {
+  const depth = getDepth(post.id);
+  groups.set(depth, [...(groups.get(depth) ?? []), post]);
+}
+
+const graphNodes: GraphNode[] = orderedPosts.map((post, orderedIndex) => {
+  const depth = getDepth(post.id);
+  const group = groups.get(depth) ?? [];
+  const groupIndex = group.findIndex((item) => item.id === post.id);
+  const frontier = frontierByName.get(post.data.frontier);
+
+  return {
+    id: post.id,
+    title: post.data.title,
+    reportNo: post.data.reportNo,
+    frontier: post.data.frontier,
+    color: frontier?.color ?? '#b8f45d',
+    href: withBase(`/reports/${post.id}/`),
+    depth,
+    x: compact ? 28 + depth * 18 : 44 + (depth / maxDepth) * 842,
+    y: compact ? 26 + orderedIndex * 64 : 34 + ((groupIndex + 1) * 400) / (group.length + 1),
+    lines: wrapTitle(post.data.title),
+  };
+});
+
+const nodeById = new Map(graphNodes.map((node) => [node.id, node]));
+const edges = orderedPosts.flatMap((post) =>
+  post.data.prerequisites.map((sourceId) => ({
+    source: nodeById.get(sourceId)!,
+    target: nodeById.get(post.id)!,
+  })),
+);
+const viewWidth = compact ? 260 : 1100;
+const viewHeight = compact ? Math.max(210, graphNodes.length * 64 + 10) : 500;
+const titleId = `graph-title-${compact ? 'compact' : 'full'}-${currentId?.replaceAll('/', '-') ?? 'index'}`;
+---
+
+<div
+  class:list={['report-graph', compact && 'report-graph--compact']}
+  data-report-graph
+  data-current-id={currentId}
+>
+  <div class="graph-toolbar">
+    <div class="graph-legend" aria-hidden="true">
+      <span><i class="legend-dot legend-dot--unread"></i> Unread</span>
+      <span><i class="legend-dot legend-dot--visited"></i> Visited</span>
+      <span><i class="legend-dot legend-dot--current"></i> Current</span>
+    </div>
+    <p><span data-progress-count>0</span> / {graphNodes.length} nodes traversed</p>
+  </div>
+
+  <div class="graph-viewport" tabindex="0" aria-label="Scrollable report graph">
+    <svg
+      viewBox={`0 0 ${viewWidth} ${viewHeight}`}
+      role="img"
+      aria-labelledby={titleId}
+      preserveAspectRatio={compact ? 'xMinYMin meet' : 'xMidYMid meet'}
+    >
+      <title id={titleId}>Technical report prerequisite graph</title>
+      <defs>
+        <marker id={`graph-arrow-${compact ? 'compact' : 'full'}`} viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" class="arrow-head"></path>
+        </marker>
+      </defs>
+
+      <g class="graph-edges" aria-hidden="true">
+        {edges.map(({ source, target }) => {
+          const sourceX = compact ? source.x : source.x + 204;
+          const sourceY = compact ? source.y : source.y + 39;
+          const targetX = target.x;
+          const targetY = compact ? target.y : target.y + 39;
+          const control = Math.max(28, (targetX - sourceX) * 0.52);
+          const path = `M ${sourceX} ${sourceY} C ${sourceX + control} ${sourceY}, ${targetX - control} ${targetY}, ${targetX} ${targetY}`;
+
+          return (
+            <path
+              class="graph-edge"
+              d={path}
+              data-from={source.id}
+              data-to={target.id}
+              marker-end={`url(#graph-arrow-${compact ? 'compact' : 'full'})`}
+            />
+          );
+        })}
+      </g>
+
+      <g class="graph-nodes">
+        {graphNodes.map((node) => (
+          <a
+            href={node.href}
+            class:list={['graph-node', node.id === currentId && 'is-current']}
+            style={`--node-color: ${node.color}`}
+            data-graph-node
+            data-node-id={node.id}
+            aria-current={node.id === currentId ? 'page' : undefined}
+          >
+            <title>{node.title}. {node.frontier}. {node.depth === 0 ? 'Entry point.' : `Level ${node.depth + 1}.`}</title>
+            {compact ? (
+              <>
+                <circle class="node-halo" cx={node.x} cy={node.y} r="11"></circle>
+                <circle class="node-core" cx={node.x} cy={node.y} r="4"></circle>
+                <text class="node-code" x={node.x + 19} y={node.y - 3}>{node.reportNo}</text>
+                <text class="node-title" x={node.x + 19} y={node.y + 12}>{node.title.length > 28 ? `${node.title.slice(0, 27)}…` : node.title}</text>
+              </>
+            ) : (
+              <>
+                <rect class="node-shell" x={node.x} y={node.y} width="204" height="78" rx="2"></rect>
+                <line class="node-signal" x1={node.x} y1={node.y} x2={node.x + 204} y2={node.y}></line>
+                <circle class="node-core" cx={node.x + 17} cy={node.y + 18} r="3.5"></circle>
+                <text class="node-code" x={node.x + 29} y={node.y + 21}>{node.reportNo}</text>
+                <text class="node-title" x={node.x + 15} y={node.y + 47}>
+                  {node.lines.map((line, index) => <tspan x={node.x + 15} dy={index === 0 ? 0 : 14}>{line}</tspan>)}
+                </text>
+                <text class="node-state" x={node.x + 189} y={node.y + 67} text-anchor="end">{node.id === currentId ? 'CURRENT' : 'UNREAD'}</text>
+              </>
+            )}
+          </a>
+        ))}
+      </g>
+    </svg>
+  </div>
+
+  {!compact && (
+    <p class="graph-help">Hover or focus a node to trace its dependency chain. Select to open the report.</p>
+  )}
+</div>
+
+<script>
+  const GRAPH_STORAGE_KEY = 'physical-extremes:visited-reports';
+
+  document.querySelectorAll<HTMLElement>('[data-report-graph]').forEach((graph) => {
+    const nodes = [...graph.querySelectorAll<SVGAElement>('[data-graph-node]')];
+    const edges = [...graph.querySelectorAll<SVGPathElement>('.graph-edge')];
+    const currentId = graph.dataset.currentId;
+    let visited = new Set<string>();
+
+    try {
+      visited = new Set(JSON.parse(localStorage.getItem(GRAPH_STORAGE_KEY) ?? '[]'));
+    } catch {
+      visited = new Set();
+    }
+
+    if (currentId) visited.add(currentId);
+
+    const persistVisited = () => {
+      try {
+        localStorage.setItem(GRAPH_STORAGE_KEY, JSON.stringify([...visited]));
+      } catch {
+        // Progress tracking is an enhancement; navigation still works without storage.
+      }
+    };
+
+    const renderProgress = () => {
+      nodes.forEach((node) => {
+        const id = node.dataset.nodeId ?? '';
+        const isVisited = visited.has(id);
+        node.classList.toggle('is-visited', isVisited);
+        const state = node.querySelector<SVGTextElement>('.node-state');
+        if (state) state.textContent = id === currentId ? 'CURRENT' : isVisited ? 'VISITED' : 'UNREAD';
+      });
+      const count = graph.querySelector<HTMLElement>('[data-progress-count]');
+      if (count) count.textContent = String(nodes.filter((node) => visited.has(node.dataset.nodeId ?? '')).length);
+    };
+
+    const connectedIds = (anchorId: string) => {
+      const ancestors = new Set([anchorId]);
+      const descendants = new Set([anchorId]);
+      let changed = true;
+
+      while (changed) {
+        changed = false;
+        for (const edge of edges) {
+          const from = edge.dataset.from ?? '';
+          const to = edge.dataset.to ?? '';
+
+          if (ancestors.has(to) && !ancestors.has(from)) {
+            ancestors.add(from);
+            changed = true;
+          }
+          if (descendants.has(from) && !descendants.has(to)) {
+            descendants.add(to);
+            changed = true;
+          }
+        }
+      }
+      return new Set([...ancestors, ...descendants]);
+    };
+
+    const activatePath = (anchorId: string) => {
+      const active = connectedIds(anchorId);
+      nodes.forEach((node) => {
+        node.classList.toggle('is-active', active.has(node.dataset.nodeId ?? ''));
+        node.classList.toggle('is-anchor', node.dataset.nodeId === anchorId);
+      });
+      edges.forEach((edge) => {
+        edge.classList.toggle(
+          'is-active',
+          active.has(edge.dataset.from ?? '') && active.has(edge.dataset.to ?? ''),
+        );
+      });
+    };
+
+    const clearPath = () => {
+      nodes.forEach((node) => node.classList.remove('is-active', 'is-anchor'));
+      edges.forEach((edge) => edge.classList.remove('is-active'));
+    };
+
+    nodes.forEach((node) => {
+      const id = node.dataset.nodeId ?? '';
+      node.addEventListener('pointerenter', () => activatePath(id));
+      node.addEventListener('pointerleave', clearPath);
+      node.addEventListener('focus', () => activatePath(id));
+      node.addEventListener('blur', clearPath);
+      node.addEventListener('click', () => {
+        visited.add(id);
+        persistVisited();
+        renderProgress();
+      });
+    });
+
+    persistVisited();
+    renderProgress();
+  });
+</script>
+
+<style>
+  .report-graph {
+    --graph-accent: #b8f45d;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: #080a0a;
+  }
+
+  .graph-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 0.75rem 1rem;
+    color: #52525b;
+    font-family: var(--font-mono);
+    font-size: 0.55rem;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+  }
+
+  .graph-toolbar p { margin: 0; }
+  .graph-legend { display: flex; flex-wrap: wrap; gap: 1rem; }
+  .graph-legend span { display: inline-flex; align-items: center; gap: 0.35rem; }
+  .legend-dot { width: 5px; height: 5px; border-radius: 999px; background: #3f3f46; }
+  .legend-dot--visited { background: #a1a1aa; }
+  .legend-dot--current { background: var(--graph-accent); box-shadow: 0 0 8px var(--graph-accent); }
+
+  .graph-viewport {
+    overflow-x: auto;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+    background-size: 40px 40px;
+    outline: none;
+  }
+
+  .graph-viewport:focus-visible { box-shadow: inset 0 0 0 1px var(--graph-accent); }
+  svg { display: block; width: 100%; min-width: 780px; height: auto; }
+  .graph-edge { fill: none; stroke: #27272a; stroke-width: 1; transition: stroke 180ms ease, filter 180ms ease, opacity 180ms ease; }
+  .arrow-head { fill: #3f3f46; transition: fill 180ms ease; }
+  .graph-edge.is-active { stroke: var(--graph-accent); filter: drop-shadow(0 0 4px rgba(184, 244, 93, 0.65)); }
+  .graph-node { --node-color: #b8f45d; opacity: 0.42; cursor: pointer; outline: none; transition: opacity 180ms ease, filter 180ms ease; }
+  .node-shell { fill: #0b0e0e; stroke: #3f3f46; stroke-width: 1; transition: fill 180ms ease, stroke 180ms ease; }
+  .node-signal { stroke: var(--node-color); stroke-width: 1.5; opacity: 0.4; }
+  .node-core { fill: var(--node-color); }
+  .node-code { fill: #71717a; font-family: var(--font-mono); font-size: 8px; letter-spacing: 0.11em; }
+  .node-title { fill: #d4d4d8; font-family: var(--font-sans); font-size: 10px; font-weight: 600; letter-spacing: -0.01em; }
+  .node-state { fill: #52525b; font-family: var(--font-mono); font-size: 6px; letter-spacing: 0.1em; }
+  .graph-node.is-visited { opacity: 0.75; }
+  .graph-node.is-current,
+  .graph-node.is-active { opacity: 1; }
+  .graph-node.is-current .node-shell,
+  .graph-node.is-anchor .node-shell { stroke: var(--node-color); fill: color-mix(in srgb, var(--node-color) 7%, #0b0e0e); }
+  .graph-node.is-current,
+  .graph-node.is-anchor { filter: drop-shadow(0 0 8px color-mix(in srgb, var(--node-color) 50%, transparent)); }
+  .graph-node:focus-visible .node-shell { stroke: white; stroke-width: 1.5; }
+
+  .graph-help {
+    margin: 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 0.7rem 1rem;
+    color: #3f3f46;
+    font-family: var(--font-mono);
+    font-size: 0.52rem;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+  }
+
+  .report-graph--compact { border: 0; background: transparent; }
+  .report-graph--compact .graph-toolbar { display: block; border-bottom: 0; padding: 0 0 0.8rem; line-height: 1.7; }
+  .report-graph--compact .graph-toolbar p { margin-top: 0.4rem; }
+  .report-graph--compact .graph-legend { gap: 0.6rem; }
+  .report-graph--compact .graph-viewport { overflow: hidden; background-size: 24px 24px; }
+  .report-graph--compact svg { min-width: 0; }
+  .report-graph--compact .node-halo { fill: #0b0e0e; stroke: #3f3f46; }
+  .report-graph--compact .node-title { font-size: 7px; fill: #71717a; }
+  .report-graph--compact .node-code { font-size: 7px; }
+  .report-graph--compact .graph-node.is-current .node-halo,
+  .report-graph--compact .graph-node.is-anchor .node-halo { stroke: var(--node-color); }
+  .report-graph--compact .graph-node:focus-visible .node-halo { stroke: white; stroke-width: 1.5; }
+
+  @media (max-width: 680px) {
+    .graph-toolbar { align-items: flex-start; flex-direction: column; }
+    svg { min-width: 700px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .graph-edge,
+    .graph-node,
+    .node-shell { transition: none; }
+  }
+</style>
