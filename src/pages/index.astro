@@ -10,6 +10,7 @@ import { withBase } from '@/utils/paths';
 const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
   (a, b) => b.data.published.valueOf() - a.data.published.valueOf(),
 );
+const openProblemCount = posts.reduce((total, post) => total + post.data.openProblems.length, 0);
 ---
 
 <BaseLayout>
@@ -116,11 +117,32 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
     </div>
   </section>
 
+  <section id="problems" class="scroll-mt-10 border-b border-white/10 px-5 py-20 md:px-8 md:py-28">
+    <div class="mx-auto max-w-[1480px]">
+      <div class="section-heading">
+        <div>
+          <p class="section-kicker">04 / Open work</p>
+          <h2>Problems worth inheriting</h2>
+        </div>
+        <p>Every report should leave behind a sharper question than it found—bounded by evidence and paired with a tractable next step.</p>
+      </div>
+
+      <a href={withBase('/problems/')} class="problem-terminal mt-12">
+        <div>
+          <span>OPEN_PROBLEMS.INDEX</span>
+          <strong>{String(openProblemCount).padStart(3, '0')}</strong>
+        </div>
+        <p>{openProblemCount ? 'Review the active engineering work queue across all five frontiers.' : 'The registry is ready and will populate from unresolved questions in original reports.'}</p>
+        <span class="problem-terminal__action">Enter registry →</span>
+      </a>
+    </div>
+  </section>
+
   <section id="reports" class="scroll-mt-10 px-5 py-20 md:px-8 md:py-28">
     <div class="mx-auto max-w-[1480px]">
       <div class="section-heading">
         <div>
-          <p class="section-kicker">04 / Field reports</p>
+          <p class="section-kicker">05 / Field reports</p>
           <h2>Latest transmissions</h2>
         </div>
         <p>Dense, cited engineering analysis for readers who want the governing equation and the manufacturing consequence.</p>

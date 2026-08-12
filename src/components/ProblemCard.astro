@@ -1,0 +1,40 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { frontierByName } from '@/data/frontiers';
+import { withBase } from '@/utils/paths';
+
+type Report = CollectionEntry<'blog'>;
+type Problem = Report['data']['openProblems'][number];
+
+interface Props {
+  problem: Problem;
+  post: Report;
+  index: number;
+}
+
+const { problem, post, index } = Astro.props;
+const frontier = frontierByName.get(post.data.frontier);
+const href = withBase(`/reports/${post.id}/#open-problem-${problem.id}`);
+---
+
+<article class="problem-card" style={`--frontier-color: ${frontier?.color ?? '#b8f45d'}`}>
+  <div class="problem-card__index" aria-hidden="true">{String(index + 1).padStart(3, '0')}</div>
+  <div class="problem-card__body">
+    <div class="problem-card__meta">
+      <span>{post.data.frontier}</span>
+      <span>{problem.status}</span>
+      <span>TRL {post.data.readinessLevel}</span>
+    </div>
+    <h2><a href={href}>{problem.title}</a></h2>
+    <p>{problem.question}</p>
+    <div class="problem-card__disciplines">
+      {problem.disciplines.map((discipline) => <span>{discipline}</span>)}
+    </div>
+  </div>
+  <div class="problem-card__action">
+    <span>Next tractable step</span>
+    <p>{problem.nextStep}</p>
+    <a href={href}>Open technical context <span>→</span></a>
+  </div>
+</article>
+

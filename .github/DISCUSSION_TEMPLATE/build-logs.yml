@@ -1,0 +1,50 @@
+title: "[Build Log] "
+body:
+  - type: dropdown
+    id: frontier
+    attributes:
+      label: Physical frontier
+      options:
+        - Deep Space
+        - Deep Ocean
+        - Deep Crust
+        - Fusion Energy
+        - Cryo-Quantum Infrastructure
+        - Cross-frontier
+    validations:
+      required: true
+  - type: input
+    id: problem
+    attributes:
+      label: Related report or open problem
+      description: Add a URL when available.
+  - type: textarea
+    id: objective
+    attributes:
+      label: What you attempted
+    validations:
+      required: true
+  - type: textarea
+    id: constraints
+    attributes:
+      label: Operating envelope and assumptions
+      description: Include materials, scale, loads, environment, and omitted effects.
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: Result, including failures
+      description: Quantify what happened and separate measurements from estimates.
+    validations:
+      required: true
+  - type: textarea
+    id: artifacts
+    attributes:
+      label: Reproducible artifacts
+      description: Link code, CAD, datasets, notebooks, images, or test procedures.
+  - type: textarea
+    id: next
+    attributes:
+      label: Next iteration
+

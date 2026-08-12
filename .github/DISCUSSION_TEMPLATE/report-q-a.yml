@@ -1,0 +1,28 @@
+title: "[Report Q&A] "
+body:
+  - type: input
+    id: report
+    attributes:
+      label: Report URL or number
+    validations:
+      required: true
+  - type: textarea
+    id: question
+    attributes:
+      label: Technical question
+      description: Point to the equation, assumption, diagram, or system boundary involved.
+    validations:
+      required: true
+  - type: textarea
+    id: interpretation
+    attributes:
+      label: Your current interpretation
+      description: Show where your reasoning diverges or where more context would help.
+    validations:
+      required: true
+  - type: textarea
+    id: references
+    attributes:
+      label: Relevant evidence
+      description: Optional primary sources, calculations, or comparable systems.
+

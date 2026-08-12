@@ -8,6 +8,14 @@ interface Props {
   description?: string;
   image?: string;
   article?: boolean;
+  robots?: string;
+  structuredData?: Record<string, unknown>;
+  articleMeta?: {
+    published: Date;
+    updated?: Date;
+    author: string;
+    section: string;
+  };
 }
 
 const {
@@ -15,10 +23,16 @@ const {
   description = 'Independent engineering reports on deep space, deep ocean, deep crust, fusion energy, and cryo-quantum infrastructure.',
   image = withBase('/og.png'),
   article = false,
+  robots = 'index, follow',
+  structuredData,
+  articleMeta,
 } = Astro.props;
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 const imageURL = new URL(image, Astro.site);
+const serializedStructuredData = structuredData
+  ? JSON.stringify(structuredData).replaceAll('<', '\\u003c')
+  : undefined;
 ---
 
 <!doctype html>
@@ -29,8 +43,11 @@ const imageURL = new URL(image, Astro.site);
     <meta name="generator" content={Astro.generator} />
     <meta name="theme-color" content="#070909" />
     <meta name="description" content={description} />
+    <meta name="robots" content={robots} />
     <link rel="canonical" href={canonicalURL} />
     <link rel="icon" type="image/png" href={withBase('/favicon.png')} />
+    <link rel="alternate" type="application/rss+xml" title="Physical Extremes reports" href={withBase('/rss.xml')} />
+    <link rel="sitemap" href={withBase('/sitemap-index.xml')} />
 
     <meta property="og:type" content={article ? 'article' : 'website'} />
     <meta property="og:title" content={title} />
@@ -41,6 +58,18 @@ const imageURL = new URL(image, Astro.site);
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={imageURL} />
+
+    {article && articleMeta && (
+      <>
+        <meta property="article:published_time" content={articleMeta.published.toISOString()} />
+        <meta property="article:modified_time" content={(articleMeta.updated ?? articleMeta.published).toISOString()} />
+        <meta property="article:author" content={articleMeta.author} />
+        <meta property="article:section" content={articleMeta.section} />
+      </>
+    )}
+    {serializedStructuredData && (
+      <script type="application/ld+json" set:html={serializedStructuredData} is:inline></script>
+    )}
 
     <title>{title}</title>
   </head>
@@ -54,7 +83,10 @@ const imageURL = new URL(image, Astro.site);
     <footer class="border-t border-white/10">
       <div class="mx-auto flex max-w-[1480px] flex-col gap-3 px-5 py-7 text-[9px] tracking-[0.15em] text-zinc-600 uppercase md:flex-row md:items-center md:justify-between md:px-8">
         <p>© {new Date().getFullYear()} Physical Extremes / Independent field notes</p>
-        <p class="font-mono">Five frontiers · One industrial future</p>
+        <div class="flex gap-4 font-mono">
+          <a href={withBase('/problems/')}>Open problems</a>
+          <a href={withBase('/rss.xml')}>RSS</a>
+        </div>
       </div>
     </footer>
   </body>

@@ -1,0 +1,62 @@
+title: "[Investigation] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Propose a bounded engineering question that could become an open problem or future report. Specific constraints and evidence make proposals actionable.
+  - type: dropdown
+    id: frontier
+    attributes:
+      label: Physical frontier
+      options:
+        - Deep Space
+        - Deep Ocean
+        - Deep Crust
+        - Fusion Energy
+        - Cryo-Quantum Infrastructure
+        - Cross-frontier
+    validations:
+      required: true
+  - type: input
+    id: question
+    attributes:
+      label: Precise engineering question
+      description: Phrase this so evidence or an experiment could narrow the answer.
+    validations:
+      required: true
+  - type: textarea
+    id: significance
+    attributes:
+      label: Why it matters
+      description: What capability, cost, risk, or physical boundary changes if this is solved?
+    validations:
+      required: true
+  - type: textarea
+    id: constraint
+    attributes:
+      label: Governing constraint
+      description: Include the relevant physics, equation, operating envelope, or failure mode.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Existing evidence and sources
+      description: Link primary literature, datasets, test results, or prior systems. Explain what each source establishes.
+    validations:
+      required: true
+  - type: textarea
+    id: next-step
+    attributes:
+      label: Next tractable step
+      description: Propose one simulation, analysis, prototype, or experiment that could reduce uncertainty.
+    validations:
+      required: true
+  - type: checkboxes
+    id: standards
+    attributes:
+      label: Submission standard
+      options:
+        - label: I separated demonstrated evidence from projection and disclosed major uncertainty.
+          required: true
+

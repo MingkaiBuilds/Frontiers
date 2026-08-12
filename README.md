@@ -72,8 +72,26 @@ title: "A concise report title"
 description: "One-sentence abstract."
 frontier: "Deep Space"
 published: 2026-08-11
+lastReviewed: 2026-08-11
 readingTime: "9 min"
 reportNo: "PX–SP–015"
+author: "Physical Extremes"
+revision: "1.0"
+difficulty: "Advanced"
+evidenceStatus: "Modeled"
+readinessLevel: 2
+reviewStatus: "Author reviewed"
+references:
+  - title: "Primary source title"
+    url: "https://example.org/paper"
+    publisher: "Research institution"
+openProblems:
+  - id: "close-the-thermal-balance"
+    title: "Close the thermal balance"
+    question: "Can the proposed rejection architecture remain mass-positive across the full duty cycle?"
+    status: "Open"
+    disciplines: ["Thermal systems", "Materials"]
+    nextStep: "Build a parameter sweep against radiator mass and degradation rate."
 prerequisites:
   - "deep-ocean/pressure-housings-are-not-the-system"
 featured: false
@@ -102,6 +120,18 @@ prerequisites:
 
 The graph is generated from these local relationships at build time. Missing references and circular prerequisite chains fail the build instead of producing broken navigation. Visited-node progress is stored locally in the reader's browser; no account or database is needed.
 
+### Trust metadata and open problems
+
+Report headers expose author, revision, last review date, difficulty, evidence status, technology-readiness level, review status, and source count. `references` produces a structured evidence register at the end of the report.
+
+Every object in `openProblems` appears both beneath its source report and in `/Frontiers/problems/`. Keep each question bounded and pair it with a specific next analysis, simulation, prototype, or experiment. The browser studio can generate both structures from its Evidence register and Open problems fields.
+
+## Community discussions
+
+The repository includes structured forms for **Report Q&A**, **Technical Critique**, **Investigation Proposals**, and **Build Logs**, plus the participation standard in `COMMUNITY.md`.
+
+In GitHub, enable **Settings → General → Features → Discussions**, then create categories using those exact names. GitHub derives these category slugs, which match the form filenames in `.github/DISCUSSION_TEMPLATE/`.
+
 ## Deployment
 
 The repository includes `.github/workflows/deploy.yml`. Every push to `main` builds and publishes the static site through the official Astro and GitHub Pages actions at:
@@ -109,6 +139,8 @@ The repository includes `.github/workflows/deploy.yml`. Every push to `main` bui
 `https://mingkaibuilds.github.io/Frontiers/`
 
 In the GitHub repository, choose **Settings → Pages → Build and deployment → GitHub Actions** once before the first deployment. A custom domain can be added later.
+
+Builds also generate `/rss.xml`, a sitemap index, `robots.txt`, Article/TechArticle structured data, and a custom 404 page. The authoring studio is excluded from indexing and from the sitemap.
 
 Vercel and Netlify settings remain included. For a root-domain build on either host, set `BASE_PATH=/` and `SITE_URL` to the final `https://` origin.
 

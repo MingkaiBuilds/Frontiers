@@ -1,0 +1,20 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { withBase } from '@/utils/paths';
+---
+
+<BaseLayout
+  title="Signal Not Found — Physical Extremes"
+  description="The requested Physical Extremes transmission could not be located."
+  robots="noindex, nofollow"
+>
+  <section class="grid min-h-[72vh] place-items-center px-5 py-20 text-center">
+    <div>
+      <p class="font-mono text-[9px] tracking-[.22em] text-zinc-700 uppercase">Error / 404 / Signal lost</p>
+      <h1 class="mt-6 text-[clamp(4rem,14vw,11rem)] leading-none font-medium tracking-[-.08em] text-zinc-200">No return.</h1>
+      <p class="mx-auto mt-6 max-w-[48ch] text-sm leading-6 text-zinc-500">This coordinate contains no indexed report, problem, or research path.</p>
+      <a href={withBase('/')} class="text-link mt-10">Return to the archive <span>→</span></a>
+    </div>
+  </section>
+</BaseLayout>
+

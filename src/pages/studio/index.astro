@@ -12,6 +12,7 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
 <BaseLayout
   title="Report Studio — Physical Extremes"
   description="A native Markdown and LaTeX writing studio for Physical Extremes engineering reports."
+  robots="noindex, nofollow"
 >
   <header class="studio-hero border-b border-white/10">
     <div class="mx-auto max-w-[1480px] px-5 py-12 md:px-8 md:py-16">

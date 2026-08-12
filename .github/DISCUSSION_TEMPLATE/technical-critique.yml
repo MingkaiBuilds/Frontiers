@@ -1,0 +1,48 @@
+title: "[Technical Critique] "
+body:
+  - type: input
+    id: report
+    attributes:
+      label: Report URL or number
+    validations:
+      required: true
+  - type: textarea
+    id: claim
+    attributes:
+      label: Claim or assumption under review
+      description: Quote briefly or identify the exact section, equation, or figure.
+    validations:
+      required: true
+  - type: textarea
+    id: critique
+    attributes:
+      label: Technical critique
+      description: Explain the error, missing boundary condition, competing interpretation, or uncertainty.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Supporting evidence
+      description: Provide calculations, data, standards, or primary literature.
+    validations:
+      required: true
+  - type: dropdown
+    id: impact
+    attributes:
+      label: Likely impact on the report
+      options:
+        - Clarification only
+        - Local correction
+        - Material conclusion change
+        - Uncertain; requires investigation
+    validations:
+      required: true
+  - type: checkboxes
+    id: conduct
+    attributes:
+      label: Review standard
+      options:
+        - label: I am critiquing the engineering claim, not the person presenting it.
+          required: true
+

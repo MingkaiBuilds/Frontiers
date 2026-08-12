@@ -1,0 +1,70 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import ProblemCard from '@/components/ProblemCard.astro';
+import { DISCUSSIONS_URL } from '@/data/site';
+import { withBase } from '@/utils/paths';
+
+const posts = await getCollection('blog', ({ data }) => !data.draft);
+const problems = posts
+  .flatMap((post) => post.data.openProblems.map((problem) => ({ problem, post })))
+  .sort((a, b) => {
+    const resolvedA = a.problem.status === 'Resolved' ? 1 : 0;
+    const resolvedB = b.problem.status === 'Resolved' ? 1 : 0;
+    return resolvedA - resolvedB || a.problem.title.localeCompare(b.problem.title);
+  });
+const activeCount = problems.filter(({ problem }) => problem.status !== 'Resolved').length;
+const disciplineCount = new Set(problems.flatMap(({ problem }) => problem.disciplines)).size;
+---
+
+<BaseLayout
+  title="Open Problems Registry — Physical Extremes"
+  description="A living registry of tractable engineering questions emerging from Physical Extremes research reports."
+>
+  <header class="registry-hero border-b border-white/10">
+    <div class="mx-auto max-w-[1480px] px-5 py-16 md:px-8 md:py-24">
+      <a href={withBase('/')} class="eyebrow-link">← Return to research archive</a>
+      <div class="mt-12 grid gap-12 lg:grid-cols-[1fr_300px] lg:items-end">
+        <div>
+          <p class="section-kicker">Work queue / Public frontier</p>
+          <h1 class="mt-5 max-w-[12ch] text-[clamp(3rem,8vw,8rem)] leading-[.88] font-medium tracking-[-.07em] text-zinc-100">Open Problems Registry.</h1>
+          <p class="mt-8 max-w-[64ch] text-base leading-7 text-zinc-400 md:text-lg">Questions extracted from published reports and reduced to a next tractable experiment, simulation, or analysis. This is where reading turns into engineering work.</p>
+        </div>
+        <dl class="registry-stats">
+          <div><dt>Indexed</dt><dd>{String(problems.length).padStart(3, '0')}</dd></div>
+          <div><dt>Active</dt><dd>{String(activeCount).padStart(3, '0')}</dd></div>
+          <div><dt>Disciplines</dt><dd>{String(disciplineCount).padStart(3, '0')}</dd></div>
+        </dl>
+      </div>
+    </div>
+  </header>
+
+  <section class="px-5 py-16 md:px-8 md:py-24">
+    <div class="mx-auto max-w-[1480px]">
+      <div class="registry-bar">
+        <p>Evidence before confidence. Specific questions before broad ambition.</p>
+        <a href={DISCUSSIONS_URL}>Propose an investigation <span>↗</span></a>
+      </div>
+
+      {problems.length > 0 ? (
+        <div class="problem-registry">
+          {problems.map(({ problem, post }, index) => (
+            <ProblemCard problem={problem} post={post} index={index} />
+          ))}
+        </div>
+      ) : (
+        <div class="registry-empty">
+          <div class="registry-empty__marker" aria-hidden="true"><span></span></div>
+          <p class="section-kicker">Registry status / 000</p>
+          <h2>No open problems indexed yet.</h2>
+          <p>The registry will populate from unresolved questions in the first original engineering reports. No synthetic challenges or demonstration entries will be used.</p>
+          <div>
+            <a class="button-primary" href={withBase('/studio/')}>Write the first report</a>
+            <a class="button-secondary" href={DISCUSSIONS_URL}>Propose a direction ↗</a>
+          </div>
+        </div>
+      )}
+    </div>
+  </section>
+</BaseLayout>
+

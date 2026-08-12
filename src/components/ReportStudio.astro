@@ -73,6 +73,52 @@ Close with the manufacturing, maintenance, and infrastructure implications.`;
         <span>Reading time</span>
         <input name="readingTime" type="text" value="8 min" autocomplete="off" />
       </label>
+      <label class="studio-field">
+        <span>Author</span>
+        <input name="author" type="text" value="Physical Extremes" autocomplete="name" />
+      </label>
+      <label class="studio-field">
+        <span>Revision</span>
+        <input name="revision" type="text" value="1.0" inputmode="decimal" autocomplete="off" />
+      </label>
+      <label class="studio-field">
+        <span>Difficulty</span>
+        <select name="difficulty">
+          <option>Foundational</option>
+          <option>Intermediate</option>
+          <option selected>Advanced</option>
+        </select>
+      </label>
+      <label class="studio-field">
+        <span>Evidence status</span>
+        <select name="evidenceStatus">
+          <option>Hypothesis</option>
+          <option selected>Modeled</option>
+          <option>Bench-tested</option>
+          <option>Field-demonstrated</option>
+          <option>Industrialized</option>
+        </select>
+      </label>
+      <label class="studio-field">
+        <span>Technology readiness</span>
+        <select name="readinessLevel">
+          {Array.from({ length: 9 }, (_, index) => (
+            <option value={index + 1} selected={index === 0}>TRL {index + 1}</option>
+          ))}
+        </select>
+      </label>
+      <label class="studio-field">
+        <span>Review status</span>
+        <select name="reviewStatus">
+          <option selected>Author reviewed</option>
+          <option>External review</option>
+          <option>Community reviewed</option>
+        </select>
+      </label>
+      <label class="studio-field">
+        <span>Last technically reviewed</span>
+        <input name="lastReviewed" type="date" value={today} />
+      </label>
       <label class="studio-field studio-field--wide">
         <span>File slug</span>
         <div class="slug-control">
@@ -86,6 +132,16 @@ Close with the manufacturing, maintenance, and infrastructure implications.`;
           {posts.map((post) => <option value={post.id}>{post.data.reportNo} / {post.data.title}</option>)}
         </select>
         <small id="prerequisites-hint">Hold Command or Control to select multiple reports.</small>
+      </label>
+      <label class="studio-field studio-field--wide">
+        <span>Evidence register</span>
+        <textarea name="references" rows="4" placeholder="Source title | https://source.example/paper | Publisher"></textarea>
+        <small>One source per line: title | URL | optional publisher.</small>
+      </label>
+      <label class="studio-field studio-field--wide">
+        <span>Open problems</span>
+        <textarea name="openProblems" rows="5" placeholder="Problem title | Precise question | Next tractable step | Materials, Controls"></textarea>
+        <small>One problem per line. These entries populate the public Open Problems Registry.</small>
       </label>
     </div>
   </section>
@@ -206,8 +262,17 @@ Close with the manufacturing, maintenance, and infrastructure implications.`;
     const published = field<HTMLInputElement>('published');
     const reportNo = field<HTMLInputElement>('reportNo');
     const readingTime = field<HTMLInputElement>('readingTime');
+    const author = field<HTMLInputElement>('author');
+    const revision = field<HTMLInputElement>('revision');
+    const difficulty = field<HTMLSelectElement>('difficulty');
+    const evidenceStatus = field<HTMLSelectElement>('evidenceStatus');
+    const readinessLevel = field<HTMLSelectElement>('readinessLevel');
+    const reviewStatus = field<HTMLSelectElement>('reviewStatus');
+    const lastReviewed = field<HTMLInputElement>('lastReviewed');
     const slug = field<HTMLInputElement>('slug');
     const prerequisites = field<HTMLSelectElement>('prerequisites');
+    const references = field<HTMLTextAreaElement>('references');
+    const openProblems = field<HTMLTextAreaElement>('openProblems');
     const editor = field<HTMLTextAreaElement>('body');
     const preview = studio.querySelector<HTMLElement>('[data-preview]')!;
     const assetGrid = studio.querySelector<HTMLElement>('[data-asset-grid]')!;
@@ -237,6 +302,36 @@ Close with the manufacturing, maintenance, and infrastructure implications.`;
     const reportFolder = () => frontierFolders[frontier.value] ?? 'deep-space';
     const imagePublicPath = (name: string) => `/images/reports/${slugify(slug.value)}/${name}`;
 
+    const parseRows = (value: string) => value
+      .split('\n')
+      .map((line) => line.split('|').map((cell) => cell.trim()))
+      .filter((row) => row.some(Boolean));
+
+    const referencesYaml = () => {
+      const rows = parseRows(references.value).filter((row) => row[0] && row[1]);
+      if (!rows.length) return ' []';
+      return `\n${rows.map(([sourceTitle, url, publisher]) =>
+        `  - title: ${escapeYaml(sourceTitle)}\n` +
+        `    url: ${escapeYaml(url)}${publisher ? `\n    publisher: ${escapeYaml(publisher)}` : ''}`
+      ).join('\n')}`;
+    };
+
+    const openProblemsYaml = () => {
+      const rows = parseRows(openProblems.value).filter((row) => row[0] && row[1] && row[2]);
+      if (!rows.length) return ' []';
+      return `\n${rows.map(([problemTitle, question, nextStep, disciplineList]) => {
+        const disciplines = (disciplineList ?? '').split(',').map((item) => item.trim()).filter(Boolean);
+        const disciplineYaml = disciplines.length
+          ? `\n    disciplines:\n${disciplines.map((item) => `      - ${escapeYaml(item)}`).join('\n')}`
+          : '\n    disciplines: []';
+        return `  - id: ${escapeYaml(slugify(problemTitle))}\n` +
+          `    title: ${escapeYaml(problemTitle)}\n` +
+          `    question: ${escapeYaml(question)}\n` +
+          `    status: "Open"${disciplineYaml}\n` +
+          `    nextStep: ${escapeYaml(nextStep)}`;
+      }).join('\n')}`;
+    };
+
     const buildSource = () => {
       const prerequisiteLines = selectedPrerequisites();
       const prerequisiteYaml = prerequisiteLines.length
@@ -248,8 +343,17 @@ Close with the manufacturing, maintenance, and infrastructure implications.`;
         `description: ${escapeYaml(description.value)}\n` +
         `frontier: ${escapeYaml(frontier.value)}\n` +
         `published: ${published.value}\n` +
+        `lastReviewed: ${lastReviewed.value}\n` +
         `readingTime: ${escapeYaml(readingTime.value)}\n` +
         `reportNo: ${escapeYaml(reportNo.value)}\n` +
+        `author: ${escapeYaml(author.value)}\n` +
+        `revision: ${escapeYaml(revision.value)}\n` +
+        `difficulty: ${escapeYaml(difficulty.value)}\n` +
+        `evidenceStatus: ${escapeYaml(evidenceStatus.value)}\n` +
+        `readinessLevel: ${readinessLevel.value}\n` +
+        `reviewStatus: ${escapeYaml(reviewStatus.value)}\n` +
+        `references:${referencesYaml()}\n` +
+        `openProblems:${openProblemsYaml()}\n` +
         `prerequisites:${prerequisiteYaml}\n` +
         `featured: false\n` +
         `---\n\n${editor.value.trim()}\n`;
@@ -317,8 +421,17 @@ Close with the manufacturing, maintenance, and infrastructure implications.`;
       published: published.value,
       reportNo: reportNo.value,
       readingTime: readingTime.value,
+      author: author.value,
+      revision: revision.value,
+      difficulty: difficulty.value,
+      evidenceStatus: evidenceStatus.value,
+      readinessLevel: readinessLevel.value,
+      reviewStatus: reviewStatus.value,
+      lastReviewed: lastReviewed.value,
       slug: slug.value,
       prerequisites: selectedPrerequisites(),
+      references: references.value,
+      openProblems: openProblems.value,
       body: editor.value,
     });
 
@@ -341,7 +454,16 @@ Close with the manufacturing, maintenance, and infrastructure implications.`;
         published.value = saved.published ?? published.value;
         reportNo.value = saved.reportNo ?? reportNo.value;
         readingTime.value = saved.readingTime ?? readingTime.value;
+        author.value = saved.author ?? author.value;
+        revision.value = saved.revision ?? revision.value;
+        difficulty.value = saved.difficulty ?? difficulty.value;
+        evidenceStatus.value = saved.evidenceStatus ?? evidenceStatus.value;
+        readinessLevel.value = saved.readinessLevel ?? readinessLevel.value;
+        reviewStatus.value = saved.reviewStatus ?? reviewStatus.value;
+        lastReviewed.value = saved.lastReviewed ?? lastReviewed.value;
         slug.value = saved.slug ?? slug.value;
+        references.value = saved.references ?? references.value;
+        openProblems.value = saved.openProblems ?? openProblems.value;
         editor.value = saved.body ?? editor.value;
         const selected = new Set<string>(saved.prerequisites ?? []);
         [...prerequisites.options].forEach((option) => { option.selected = selected.has(option.value); });
@@ -499,7 +621,11 @@ Close with the manufacturing, maintenance, and infrastructure implications.`;
 
     slug.addEventListener('input', () => { autoSlug = false; slug.value = slugify(slug.value); updateManifest(); });
     title.addEventListener('input', () => { if (autoSlug) slug.value = slugify(title.value); });
-    [title, description, frontier, published, reportNo, readingTime, prerequisites, editor].forEach((element) => {
+    [
+      title, description, frontier, published, reportNo, readingTime, author,
+      revision, difficulty, evidenceStatus, readinessLevel, reviewStatus,
+      lastReviewed, prerequisites, references, openProblems, editor,
+    ].forEach((element) => {
       element.addEventListener('input', () => { renderPreview(); saveDraft(); });
       element.addEventListener('change', () => { renderPreview(); saveDraft(); });
     });

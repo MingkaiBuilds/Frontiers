@@ -4,6 +4,7 @@ import BaseLayout from './BaseLayout.astro';
 import ReportGraph from '@/components/ReportGraph.astro';
 import { frontierByName } from '@/data/frontiers';
 import { withBase } from '@/utils/paths';
+import { DISCUSSIONS_URL } from '@/data/site';
 
 interface Heading {
   depth: number;
@@ -25,13 +26,41 @@ const date = post.data.published.toLocaleDateString('en-US', {
   year: 'numeric',
   timeZone: 'UTC',
 });
+const reviewedDate = (post.data.lastReviewed ?? post.data.updated ?? post.data.published).toLocaleDateString('en-US', {
+  month: 'short',
+  day: 'numeric',
+  year: 'numeric',
+  timeZone: 'UTC',
+});
 const toc = headings.filter((heading) => heading.depth === 2 || heading.depth === 3);
+const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+const structuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'TechArticle',
+  headline: post.data.title,
+  description: post.data.description,
+  datePublished: post.data.published.toISOString(),
+  dateModified: (post.data.updated ?? post.data.published).toISOString(),
+  author: { '@type': 'Person', name: post.data.author },
+  publisher: { '@type': 'Organization', name: 'Physical Extremes' },
+  articleSection: post.data.frontier,
+  proficiencyLevel: post.data.difficulty,
+  mainEntityOfPage: canonicalURL.href,
+  url: canonicalURL.href,
+};
 ---
 
 <BaseLayout
   title={`${post.data.title} — Physical Extremes`}
   description={post.data.description}
   article
+  structuredData={structuredData}
+  articleMeta={{
+    published: post.data.published,
+    updated: post.data.updated,
+    author: post.data.author,
+    section: post.data.frontier,
+  }}
 >
   <article style={`--frontier-color: ${frontier?.color ?? '#b8f45d'}`}>
     <header class="report-hero border-b border-white/10">
@@ -55,11 +84,20 @@ const toc = headings.filter((heading) => heading.depth === 2 || heading.depth ==
 
           <dl class="report-metadata self-end border-t border-white/10 pt-5 font-mono text-[10px]">
             <div><dt>Published</dt><dd>{date}</dd></div>
-            <div><dt>Reading time</dt><dd>{post.data.readingTime}</dd></div>
-            <div><dt>Revision</dt><dd>{post.data.updated ? 'Updated' : 'Initial release'}</dd></div>
-            <div><dt>Format</dt><dd>Engineering brief</dd></div>
+            <div><dt>Author</dt><dd>{post.data.author}</dd></div>
+            <div><dt>Revision</dt><dd>v{post.data.revision}</dd></div>
+            <div><dt>Last reviewed</dt><dd>{reviewedDate}</dd></div>
           </dl>
         </div>
+
+        <dl class="trust-register mt-10" aria-label="Report trust and maturity indicators">
+          <div><dt>Difficulty</dt><dd>{post.data.difficulty}</dd></div>
+          <div><dt>Evidence</dt><dd>{post.data.evidenceStatus}</dd></div>
+          <div><dt>Readiness</dt><dd>TRL {post.data.readinessLevel} / 9</dd></div>
+          <div><dt>Review</dt><dd>{post.data.reviewStatus}</dd></div>
+          <div><dt>Sources</dt><dd>{post.data.references.length}</dd></div>
+          <div><dt>Reading time</dt><dd>{post.data.readingTime}</dd></div>
+        </dl>
       </div>
     </header>
 
@@ -79,8 +117,57 @@ const toc = headings.filter((heading) => heading.depth === 2 || heading.depth ==
         </div>
       </aside>
 
-      <div class="prose min-w-0">
-        <slot />
+      <div class="min-w-0">
+        <div class="prose">
+          <slot />
+        </div>
+
+        {post.data.references.length > 0 && (
+          <section class="report-supplement" aria-labelledby="report-sources">
+            <p class="section-kicker">Evidence register</p>
+            <h2 id="report-sources">Sources</h2>
+            <ol class="source-register">
+              {post.data.references.map((reference) => (
+                <li>
+                  <a href={reference.url} rel="noreferrer">{reference.title}</a>
+                  {reference.publisher && <span>{reference.publisher}</span>}
+                </li>
+              ))}
+            </ol>
+          </section>
+        )}
+
+        {post.data.openProblems.length > 0 && (
+          <section class="report-supplement" aria-labelledby="report-open-problems">
+            <p class="section-kicker">Unresolved work</p>
+            <h2 id="report-open-problems">Open problems raised here</h2>
+            <div class="problem-stack">
+              {post.data.openProblems.map((problem) => (
+                <article id={`open-problem-${problem.id}`} class="problem-brief">
+                  <div class="problem-brief__meta">
+                    <span>{problem.status}</span>
+                    <span>{problem.disciplines.join(' · ') || post.data.frontier}</span>
+                  </div>
+                  <h3>{problem.title}</h3>
+                  <p>{problem.question}</p>
+                  <div><span>Next tractable step</span><strong>{problem.nextStep}</strong></div>
+                </article>
+              ))}
+            </div>
+          </section>
+        )}
+
+        <section class="report-participation" aria-labelledby="report-participation-title">
+          <div>
+            <p class="section-kicker">Continue the work</p>
+            <h2 id="report-participation-title">Challenge, correct, or extend this report.</h2>
+            <p>Bring evidence, expose a weak assumption, or propose the next experiment. Confirmed work can become a revision to the report.</p>
+          </div>
+          <div class="report-participation__actions">
+            <a href={DISCUSSIONS_URL}>Open the discussion <span>↗</span></a>
+            <a href={withBase('/problems/')}>Browse open problems <span>→</span></a>
+          </div>
+        </section>
       </div>
 
       <aside class="hidden xl:block">
