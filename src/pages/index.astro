@@ -48,7 +48,7 @@ const authorMode = import.meta.env.DEV;
         <dl class="space-y-7 border-t border-white/10 pt-6 font-mono text-[9px] tracking-[0.12em] uppercase">
           <div><dt class="text-zinc-700">Domains</dt><dd class="mt-2 text-zinc-400">05 / Active</dd></div>
           <div><dt class="text-zinc-700">Reports</dt><dd class="mt-2 text-zinc-400">{String(posts.length).padStart(2, '0')} / Indexed</dd></div>
-          <div><dt class="text-zinc-700">Signal</dt><dd class="mt-2 text-lime-300">Awaiting first</dd></div>
+          <div><dt class="text-zinc-700">Signal</dt><dd class="mt-2 text-lime-300">{posts.length ? 'Transmission live' : 'Awaiting first'}</dd></div>
         </dl>
       </aside>
     </div>
