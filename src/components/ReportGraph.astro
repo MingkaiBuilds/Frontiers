@@ -1,6 +1,6 @@
 ---
 import type { CollectionEntry } from 'astro:content';
-import { frontierByName } from '@/data/frontiers';
+import { FRONTIERS, frontierByName } from '@/data/frontiers';
 import { withBase } from '@/utils/paths';
 
 interface Props {
@@ -67,17 +67,31 @@ const orderedPosts = [...posts].sort((a, b) => {
   return depthDifference || a.data.published.valueOf() - b.data.published.valueOf();
 });
 const maxDepth = Math.max(1, ...orderedPosts.map((post) => getDepth(post.id)));
-const groups = new Map<number, CollectionEntry<'blog'>[]>();
+const activeFrontiers = FRONTIERS.filter((frontier) =>
+  orderedPosts.some((post) => post.data.frontier === frontier.name),
+);
+const frontierIndex = new Map(activeFrontiers.map((frontier, index) => [frontier.name, index]));
+const fullNodeWidth = 220;
+const fullNodeHeight = 88;
+const fullDepthGap = 288;
+const fullViewportWidth = 1200;
+const fullViewportHeight = 620;
+const fullWorldWidth = Math.max(1500, 150 + maxDepth * fullDepthGap + fullNodeWidth + 150);
+const fullWorldHeight = Math.max(700, 160 + Math.max(0, activeFrontiers.length - 1) * 250);
+const frontierDepthGroups = new Map<string, CollectionEntry<'blog'>[]>();
 
 for (const post of orderedPosts) {
   const depth = getDepth(post.id);
-  groups.set(depth, [...(groups.get(depth) ?? []), post]);
+  const key = `${post.data.frontier}:${depth}`;
+  frontierDepthGroups.set(key, [...(frontierDepthGroups.get(key) ?? []), post]);
 }
 
 const graphNodes: GraphNode[] = orderedPosts.map((post, orderedIndex) => {
   const depth = getDepth(post.id);
-  const group = groups.get(depth) ?? [];
-  const groupIndex = group.findIndex((item) => item.id === post.id);
+  const routeGroup = frontierDepthGroups.get(`${post.data.frontier}:${depth}`) ?? [];
+  const routeGroupIndex = routeGroup.findIndex((item) => item.id === post.id);
+  const laneIndex = frontierIndex.get(post.data.frontier) ?? 0;
+  const laneY = activeFrontiers.length === 1 ? fullWorldHeight / 2 : 80 + laneIndex * 250;
   const frontier = frontierByName.get(post.data.frontier);
 
   return {
@@ -88,11 +102,19 @@ const graphNodes: GraphNode[] = orderedPosts.map((post, orderedIndex) => {
     color: frontier?.color ?? '#b8f45d',
     href: withBase(`/reports/${post.id}/`),
     depth,
-    x: compact ? 28 + depth * 18 : 44 + (depth / maxDepth) * 842,
-    y: compact ? 26 + orderedIndex * 64 : 34 + ((groupIndex + 1) * 400) / (group.length + 1),
+    x: compact ? 28 + depth * 18 : 120 + depth * fullDepthGap,
+    y: compact
+      ? 26 + orderedIndex * 64
+      : laneY - fullNodeHeight / 2 + (routeGroupIndex - (routeGroup.length - 1) / 2) * 112,
     lines: wrapTitle(post.data.title),
   };
 });
+
+const frontierLanes = activeFrontiers.map((frontier, index) => ({
+  ...frontier,
+  y: activeFrontiers.length === 1 ? fullWorldHeight / 2 : 80 + index * 250,
+  count: graphNodes.filter((node) => node.frontier === frontier.name).length,
+}));
 
 const nodeById = new Map(graphNodes.map((node) => [node.id, node]));
 const edges = orderedPosts.flatMap((post) =>
@@ -101,8 +123,8 @@ const edges = orderedPosts.flatMap((post) =>
     target: nodeById.get(post.id)!,
   })),
 );
-const viewWidth = compact ? 260 : 1100;
-const viewHeight = compact ? Math.max(210, graphNodes.length * 64 + 10) : 500;
+const viewWidth = compact ? 260 : fullViewportWidth;
+const viewHeight = compact ? Math.max(210, graphNodes.length * 64 + 10) : fullViewportHeight;
 const titleId = `graph-title-${compact ? 'compact' : 'full'}-${currentId?.replaceAll('/', '-') ?? 'index'}`;
 const studioHref = withBase('/studio/');
 const authorMode = import.meta.env.DEV;
@@ -121,10 +143,44 @@ const authorMode = import.meta.env.DEV;
         <span><i class="legend-dot legend-dot--current"></i> Current</span>
       </div>
     ) : <p>Dependency field / awaiting origin node</p>}
-    <p><span data-progress-count>0</span> / {graphNodes.length} nodes traversed</p>
+    <div class="graph-toolbar__status">
+      <p><span data-progress-count>0</span> / {graphNodes.length} nodes traversed</p>
+      {!compact && graphNodes.length > 0 && (
+        <div class="graph-controls" aria-label="Graph view controls">
+          <button type="button" data-graph-action="start" aria-label="Return to the beginning of the selected route">Start</button>
+          <button type="button" data-graph-action="fit" aria-label="Fit the complete graph in view">Fit all</button>
+          <button type="button" data-graph-action="zoom-out" aria-label="Zoom out">−</button>
+          <span data-zoom-level aria-live="polite">100%</span>
+          <button type="button" data-graph-action="zoom-in" aria-label="Zoom in">+</button>
+        </div>
+      )}
+    </div>
   </div>
 
-  <div class="graph-viewport" tabindex="0" aria-label="Scrollable report graph">
+  {!compact && frontierLanes.length > 0 && (
+    <div class="graph-routes" aria-label="Choose a frontier path">
+      <span>Follow frontier</span>
+      {frontierLanes.map((frontier, index) => (
+        <button
+          type="button"
+          class:list={[index === 0 && 'is-selected']}
+          style={`--route-color: ${frontier.color}`}
+          data-graph-route={frontier.name}
+          aria-pressed={index === 0 ? 'true' : 'false'}
+        >
+          <i></i>{frontier.name}<small>{String(frontier.count).padStart(2, '0')}</small>
+        </button>
+      ))}
+    </div>
+  )}
+
+  <div
+    class="graph-viewport"
+    tabindex="0"
+    aria-label={compact ? 'Report prerequisite graph' : 'Interactive report map. Drag or scroll to move through the frontier path.'}
+    data-world-width={fullWorldWidth}
+    data-world-height={fullWorldHeight}
+  >
     {graphNodes.length === 0 ? (
       <div class="graph-empty">
         <span class="graph-empty__origin" aria-hidden="true"></span>
@@ -146,12 +202,26 @@ const authorMode = import.meta.env.DEV;
         </marker>
       </defs>
 
+      <g data-graph-stage>
+      {!compact && (
+        <g class="graph-lanes" aria-hidden="true">
+          {frontierLanes.map((frontier) => (
+            <>
+              <line x1="30" y1={frontier.y} x2={fullWorldWidth - 30} y2={frontier.y}></line>
+              <text x="38" y={frontier.y - 70} style={`--lane-color: ${frontier.color}`}>
+                {frontier.name} / {String(frontier.count).padStart(2, '0')} reports
+              </text>
+            </>
+          ))}
+        </g>
+      )}
+
       <g class="graph-edges" aria-hidden="true">
         {edges.map(({ source, target }) => {
-          const sourceX = compact ? source.x : source.x + 204;
-          const sourceY = compact ? source.y : source.y + 39;
+          const sourceX = compact ? source.x : source.x + fullNodeWidth;
+          const sourceY = compact ? source.y : source.y + fullNodeHeight / 2;
           const targetX = target.x;
-          const targetY = compact ? target.y : target.y + 39;
+          const targetY = compact ? target.y : target.y + fullNodeHeight / 2;
           const control = Math.max(28, (targetX - sourceX) * 0.52);
           const path = `M ${sourceX} ${sourceY} C ${sourceX + control} ${sourceY}, ${targetX - control} ${targetY}, ${targetX} ${targetY}`;
 
@@ -175,6 +245,9 @@ const authorMode = import.meta.env.DEV;
             style={`--node-color: ${node.color}`}
             data-graph-node
             data-node-id={node.id}
+            data-frontier={node.frontier}
+            data-node-x={node.x}
+            data-node-y={node.y}
             aria-current={node.id === currentId ? 'page' : undefined}
           >
             <title>{node.title}. {node.frontier}. {node.depth === 0 ? 'Entry point.' : `Level ${node.depth + 1}.`}</title>
@@ -187,25 +260,26 @@ const authorMode = import.meta.env.DEV;
               </>
             ) : (
               <>
-                <rect class="node-shell" x={node.x} y={node.y} width="204" height="78" rx="2"></rect>
-                <line class="node-signal" x1={node.x} y1={node.y} x2={node.x + 204} y2={node.y}></line>
+                <rect class="node-shell" x={node.x} y={node.y} width={fullNodeWidth} height={fullNodeHeight} rx="2"></rect>
+                <line class="node-signal" x1={node.x} y1={node.y} x2={node.x + fullNodeWidth} y2={node.y}></line>
                 <circle class="node-core" cx={node.x + 17} cy={node.y + 18} r="3.5"></circle>
                 <text class="node-code" x={node.x + 29} y={node.y + 21}>{node.reportNo}</text>
-                <text class="node-title" x={node.x + 15} y={node.y + 47}>
+                <text class="node-title" x={node.x + 15} y={node.y + 51}>
                   {node.lines.map((line, index) => <tspan x={node.x + 15} dy={index === 0 ? 0 : 14}>{line}</tspan>)}
                 </text>
-                <text class="node-state" x={node.x + 189} y={node.y + 67} text-anchor="end">{node.id === currentId ? 'CURRENT' : 'UNREAD'}</text>
+                <text class="node-state" x={node.x + fullNodeWidth - 15} y={node.y + fullNodeHeight - 12} text-anchor="end">{node.id === currentId ? 'CURRENT' : 'UNREAD'}</text>
               </>
             )}
           </a>
         ))}
+      </g>
       </g>
     </svg>
     )}
   </div>
 
   {!compact && graphNodes.length > 0 && (
-    <p class="graph-help">Hover or focus a node to trace its dependency chain. Select to open the report.</p>
+    <p class="graph-help"><span>Drag or scroll to travel the route. Hover or focus a node to trace its dependency chain. Select to open the report.</span><kbd>←</kbd><kbd>→</kbd><kbd>+</kbd><kbd>−</kbd></p>
   )}
 </div>
 
@@ -215,8 +289,33 @@ const authorMode = import.meta.env.DEV;
   document.querySelectorAll<HTMLElement>('[data-report-graph]').forEach((graph) => {
     const nodes = [...graph.querySelectorAll<SVGAElement>('[data-graph-node]')];
     const edges = [...graph.querySelectorAll<SVGPathElement>('.graph-edge')];
+    const viewport = graph.querySelector<HTMLElement>('.graph-viewport');
+    const svg = viewport?.querySelector<SVGSVGElement>('svg');
+    const stage = svg?.querySelector<SVGGElement>('[data-graph-stage]');
+    const isCompact = graph.classList.contains('report-graph--compact');
     const currentId = graph.dataset.currentId;
     let visited = new Set<string>();
+    let selectedFrontier = graph.querySelector<HTMLButtonElement>('[data-graph-route].is-selected')?.dataset.graphRoute ?? '';
+    let scale = 1;
+    let translateX = 0;
+    let translateY = 0;
+    let dragging = false;
+    let suppressClick = false;
+    let pointerStartX = 0;
+    let pointerStartY = 0;
+    let pointerStartGraphX = 0;
+    let pointerStartGraphY = 0;
+    let startTranslateX = 0;
+    let startTranslateY = 0;
+
+    const VIEW_WIDTH = 1200;
+    const VIEW_HEIGHT = 620;
+    const NODE_WIDTH = 220;
+    const NODE_HEIGHT = 88;
+    const MIN_SCALE = 0.22;
+    const MAX_SCALE = 3.2;
+    const worldWidth = Number(viewport?.dataset.worldWidth ?? VIEW_WIDTH);
+    const worldHeight = Number(viewport?.dataset.worldHeight ?? VIEW_HEIGHT);
 
     try {
       visited = new Set(JSON.parse(localStorage.getItem(GRAPH_STORAGE_KEY) ?? '[]'));
@@ -244,6 +343,113 @@ const authorMode = import.meta.env.DEV;
       });
       const count = graph.querySelector<HTMLElement>('[data-progress-count]');
       if (count) count.textContent = String(nodes.filter((node) => visited.has(node.dataset.nodeId ?? '')).length);
+    };
+
+    const updateZoomLabel = () => {
+      const label = graph.querySelector<HTMLElement>('[data-zoom-level]');
+      if (label) label.textContent = `${Math.round(scale * 100)}%`;
+    };
+
+    const clampTransform = () => {
+      const margin = 70;
+      const scaledWidth = worldWidth * scale;
+      const scaledHeight = worldHeight * scale;
+
+      if (scaledWidth <= VIEW_WIDTH - margin * 2) {
+        translateX = (VIEW_WIDTH - scaledWidth) / 2;
+      } else {
+        translateX = Math.min(margin, Math.max(VIEW_WIDTH - scaledWidth - margin, translateX));
+      }
+
+      if (scaledHeight <= VIEW_HEIGHT - margin * 2) {
+        translateY = (VIEW_HEIGHT - scaledHeight) / 2;
+      } else {
+        translateY = Math.min(margin, Math.max(VIEW_HEIGHT - scaledHeight - margin, translateY));
+      }
+    };
+
+    const renderTransform = () => {
+      if (!stage || isCompact) return;
+      clampTransform();
+      stage.setAttribute('transform', `translate(${translateX} ${translateY}) scale(${scale})`);
+      updateZoomLabel();
+    };
+
+    const graphPoint = (clientX: number, clientY: number) => {
+      const matrix = svg?.getScreenCTM();
+      if (!matrix) return { x: VIEW_WIDTH / 2, y: VIEW_HEIGHT / 2 };
+      const point = new DOMPoint(clientX, clientY).matrixTransform(matrix.inverse());
+      return { x: point.x, y: point.y };
+    };
+
+    const preferredNodeScale = () => {
+      const width = svg?.getBoundingClientRect().width ?? 1200;
+      return Math.min(2.4, Math.max(0.85, 900 / width));
+    };
+
+    const zoomAt = (nextScale: number, focusX = VIEW_WIDTH / 2, focusY = VIEW_HEIGHT / 2) => {
+      const boundedScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, nextScale));
+      const worldX = (focusX - translateX) / scale;
+      const worldY = (focusY - translateY) / scale;
+      scale = boundedScale;
+      translateX = focusX - worldX * scale;
+      translateY = focusY - worldY * scale;
+      renderTransform();
+    };
+
+    const routeNodes = (frontier = selectedFrontier) =>
+      nodes.filter((node) => !frontier || node.dataset.frontier === frontier);
+
+    const boundsFor = (items: SVGAElement[]) => {
+      const positions = items.map((node) => ({
+        x: Number(node.dataset.nodeX ?? 0),
+        y: Number(node.dataset.nodeY ?? 0),
+      }));
+      return {
+        minX: Math.min(...positions.map((point) => point.x)),
+        maxX: Math.max(...positions.map((point) => point.x)) + NODE_WIDTH,
+        minY: Math.min(...positions.map((point) => point.y)),
+        maxY: Math.max(...positions.map((point) => point.y)) + NODE_HEIGHT,
+      };
+    };
+
+    const centerNode = (node: SVGAElement, nextScale = Math.max(preferredNodeScale(), scale)) => {
+      const x = Number(node.dataset.nodeX ?? 0) + NODE_WIDTH / 2;
+      const y = Number(node.dataset.nodeY ?? 0) + NODE_HEIGHT / 2;
+      scale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, nextScale));
+      translateX = VIEW_WIDTH * 0.32 - x * scale;
+      translateY = VIEW_HEIGHT / 2 - y * scale;
+      renderTransform();
+    };
+
+    const startRoute = (continueProgress = true) => {
+      const items = routeNodes();
+      if (!items.length) return;
+      const firstUnread = items.find((node) => !visited.has(node.dataset.nodeId ?? ''));
+      const latestVisited = [...items].reverse().find((node) => visited.has(node.dataset.nodeId ?? ''));
+      centerNode(continueProgress ? firstUnread ?? latestVisited ?? items[0] : items[0], preferredNodeScale());
+    };
+
+    const fitItems = (items: SVGAElement[]) => {
+      if (!items.length) return;
+      const bounds = boundsFor(items);
+      const padding = 100;
+      const width = Math.max(1, bounds.maxX - bounds.minX);
+      const height = Math.max(1, bounds.maxY - bounds.minY);
+      scale = Math.min(1.15, Math.max(MIN_SCALE, Math.min((VIEW_WIDTH - padding * 2) / width, (VIEW_HEIGHT - padding * 2) / height)));
+      translateX = VIEW_WIDTH / 2 - ((bounds.minX + bounds.maxX) / 2) * scale;
+      translateY = VIEW_HEIGHT / 2 - ((bounds.minY + bounds.maxY) / 2) * scale;
+      renderTransform();
+    };
+
+    const selectRoute = (frontier: string) => {
+      selectedFrontier = frontier;
+      graph.querySelectorAll<HTMLButtonElement>('[data-graph-route]').forEach((button) => {
+        const selected = button.dataset.graphRoute === frontier;
+        button.classList.toggle('is-selected', selected);
+        button.setAttribute('aria-pressed', String(selected));
+      });
+      startRoute();
     };
 
     const connectedIds = (anchorId: string) => {
@@ -293,7 +499,10 @@ const authorMode = import.meta.env.DEV;
       const id = node.dataset.nodeId ?? '';
       node.addEventListener('pointerenter', () => activatePath(id));
       node.addEventListener('pointerleave', clearPath);
-      node.addEventListener('focus', () => activatePath(id));
+      node.addEventListener('focus', () => {
+        activatePath(id);
+        if (!isCompact) centerNode(node);
+      });
       node.addEventListener('blur', clearPath);
       node.addEventListener('click', () => {
         visited.add(id);
@@ -301,6 +510,96 @@ const authorMode = import.meta.env.DEV;
         renderProgress();
       });
     });
+
+    graph.querySelectorAll<HTMLButtonElement>('[data-graph-route]').forEach((button) => {
+      button.addEventListener('click', () => selectRoute(button.dataset.graphRoute ?? ''));
+    });
+
+    graph.querySelector<HTMLButtonElement>('[data-graph-action="start"]')?.addEventListener('click', () => startRoute(false));
+    graph.querySelector<HTMLButtonElement>('[data-graph-action="fit"]')?.addEventListener('click', () => fitItems(nodes));
+    graph.querySelector<HTMLButtonElement>('[data-graph-action="zoom-in"]')?.addEventListener('click', () => zoomAt(scale * 1.2));
+    graph.querySelector<HTMLButtonElement>('[data-graph-action="zoom-out"]')?.addEventListener('click', () => zoomAt(scale / 1.2));
+
+    if (viewport && svg && stage && !isCompact) {
+      viewport.addEventListener('wheel', (event) => {
+        if (event.ctrlKey || event.metaKey) {
+          const point = graphPoint(event.clientX, event.clientY);
+          zoomAt(scale * Math.exp(-event.deltaY * 0.002), point.x, point.y);
+          event.preventDefault();
+          return;
+        }
+
+        const previousX = translateX;
+        const previousY = translateY;
+        if (event.shiftKey || Math.abs(event.deltaX) > Math.abs(event.deltaY)) {
+          translateX -= event.deltaX || event.deltaY;
+        } else {
+          translateX -= event.deltaY;
+        }
+        translateY -= event.deltaX === 0 ? 0 : event.deltaY * 0.35;
+        renderTransform();
+        if (previousX !== translateX || previousY !== translateY) event.preventDefault();
+      }, { passive: false });
+
+      viewport.addEventListener('pointerdown', (event) => {
+        if (event.button !== 0) return;
+        dragging = true;
+        suppressClick = false;
+        pointerStartX = event.clientX;
+        pointerStartY = event.clientY;
+        const startPoint = graphPoint(event.clientX, event.clientY);
+        pointerStartGraphX = startPoint.x;
+        pointerStartGraphY = startPoint.y;
+        startTranslateX = translateX;
+        startTranslateY = translateY;
+        viewport.setPointerCapture(event.pointerId);
+        viewport.classList.add('is-dragging');
+      });
+
+      viewport.addEventListener('pointermove', (event) => {
+        if (!dragging) return;
+        const point = graphPoint(event.clientX, event.clientY);
+        const dx = point.x - pointerStartGraphX;
+        const dy = point.y - pointerStartGraphY;
+        if (Math.hypot(event.clientX - pointerStartX, event.clientY - pointerStartY) > 4) suppressClick = true;
+        translateX = startTranslateX + dx;
+        translateY = startTranslateY + dy;
+        renderTransform();
+      });
+
+      const endDrag = (event: PointerEvent) => {
+        if (!dragging) return;
+        dragging = false;
+        viewport.classList.remove('is-dragging');
+        if (viewport.hasPointerCapture(event.pointerId)) viewport.releasePointerCapture(event.pointerId);
+      };
+
+      viewport.addEventListener('pointerup', endDrag);
+      viewport.addEventListener('pointercancel', endDrag);
+      viewport.addEventListener('click', (event) => {
+        if (!suppressClick) return;
+        event.preventDefault();
+        event.stopPropagation();
+        suppressClick = false;
+      }, true);
+
+      viewport.addEventListener('keydown', (event) => {
+        const step = event.shiftKey ? 180 : 80;
+        if (event.key === 'ArrowLeft') translateX += step;
+        else if (event.key === 'ArrowRight') translateX -= step;
+        else if (event.key === 'ArrowUp') translateY += step;
+        else if (event.key === 'ArrowDown') translateY -= step;
+        else if (event.key === '+' || event.key === '=') zoomAt(scale * 1.2);
+        else if (event.key === '-' || event.key === '_') zoomAt(scale / 1.2);
+        else if (event.key.toLowerCase() === 'f') fitItems(nodes);
+        else if (event.key === 'Home' || event.key === '0') startRoute(false);
+        else return;
+        event.preventDefault();
+        renderTransform();
+      });
+
+      startRoute();
+    }
 
     persistVisited();
     renderProgress();
@@ -329,21 +628,84 @@ const authorMode = import.meta.env.DEV;
   }
 
   .graph-toolbar p { margin: 0; }
+  .graph-toolbar__status { display: flex; align-items: center; gap: 1rem; }
   .graph-legend { display: flex; flex-wrap: wrap; gap: 1rem; }
   .graph-legend span { display: inline-flex; align-items: center; gap: 0.35rem; }
   .legend-dot { width: 5px; height: 5px; border-radius: 999px; background: #3f3f46; }
   .legend-dot--visited { background: #a1a1aa; }
   .legend-dot--current { background: var(--graph-accent); box-shadow: 0 0 8px var(--graph-accent); }
 
-  .graph-viewport {
+  .graph-controls { display: inline-flex; align-items: center; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.1); }
+  .graph-controls button,
+  .graph-controls span {
+    min-width: 2rem;
+    border: 0;
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+    background: transparent;
+    padding: 0.42rem 0.58rem;
+    color: #71717a;
+    font: inherit;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+  .graph-controls button { cursor: pointer; }
+  .graph-controls button:hover,
+  .graph-controls button:focus-visible { background: rgba(255, 255, 255, 0.045); color: #e4e4e7; outline: none; }
+  .graph-controls span { min-width: 3.6rem; text-align: center; }
+  .graph-controls > :last-child { border-right: 0; }
+
+  .graph-routes {
+    display: flex;
+    align-items: center;
+    gap: .55rem;
     overflow-x: auto;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding: .65rem 1rem;
+    color: #3f3f46;
+    font-family: var(--font-mono);
+    font-size: .51rem;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    scrollbar-width: thin;
+  }
+  .graph-routes > span { flex: 0 0 auto; margin-right: .25rem; }
+  .graph-routes button {
+    --route-color: #b8f45d;
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: .45rem;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: transparent;
+    padding: .45rem .65rem;
+    color: #71717a;
+    font: inherit;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+  .graph-routes button i { width: 5px; height: 5px; border-radius: 50%; background: var(--route-color); opacity: .55; }
+  .graph-routes button small { color: #3f3f46; font: inherit; }
+  .graph-routes button:hover,
+  .graph-routes button:focus-visible,
+  .graph-routes button.is-selected { border-color: color-mix(in srgb, var(--route-color) 45%, #27272a); color: #e4e4e7; outline: none; }
+  .graph-routes button.is-selected { background: color-mix(in srgb, var(--route-color) 6%, #080a0a); box-shadow: inset 0 -1px 0 var(--route-color); }
+  .graph-routes button.is-selected i { opacity: 1; box-shadow: 0 0 8px var(--route-color); }
+
+  .graph-viewport {
+    position: relative;
+    overflow: hidden;
     background-image:
       linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
       linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
     background-size: 40px 40px;
+    cursor: grab;
     outline: none;
+    touch-action: none;
+    user-select: none;
   }
 
+  .graph-viewport.is-dragging { cursor: grabbing; }
   .graph-viewport:focus-visible { box-shadow: inset 0 0 0 1px var(--graph-accent); }
   .graph-empty { display: grid; min-height: 420px; place-items: center; align-content: center; gap: .65rem; padding: 2rem; text-align: center; }
   .graph-empty__origin { position: relative; width: 12px; height: 12px; margin-bottom: 1rem; border: 1px solid #52525b; border-radius: 50%; }
@@ -355,7 +717,9 @@ const authorMode = import.meta.env.DEV;
   .graph-empty a { margin-top: .5rem; color: #b8f45d; font-family: var(--font-mono); font-size: .56rem; letter-spacing: .1em; text-decoration: none; text-transform: uppercase; }
   .graph-empty a:hover { color: #d9f99d; }
   .graph-empty__status { margin-top: .5rem; color: #3f3f46; font-family: var(--font-mono); font-size: .56rem; letter-spacing: .1em; text-transform: uppercase; }
-  svg { display: block; width: 100%; min-width: 780px; height: auto; }
+  svg { display: block; width: 100%; min-width: 0; height: clamp(420px, 52vw, 680px); }
+  .graph-lanes line { stroke: rgba(255, 255, 255, 0.035); stroke-width: 1; stroke-dasharray: 3 12; vector-effect: non-scaling-stroke; }
+  .graph-lanes text { fill: var(--lane-color); opacity: .4; font-family: var(--font-mono); font-size: 8px; letter-spacing: .16em; text-transform: uppercase; }
   .graph-edge { fill: none; stroke: #27272a; stroke-width: 1; transition: stroke 180ms ease, filter 180ms ease, opacity 180ms ease; }
   .arrow-head { fill: #3f3f46; transition: fill 180ms ease; }
   .graph-edge.is-active { stroke: var(--graph-accent); filter: drop-shadow(0 0 4px rgba(184, 244, 93, 0.65)); }
@@ -376,6 +740,10 @@ const authorMode = import.meta.env.DEV;
   .graph-node:focus-visible .node-shell { stroke: white; stroke-width: 1.5; }
 
   .graph-help {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .7rem;
     margin: 0;
     border-top: 1px solid rgba(255, 255, 255, 0.08);
     padding: 0.7rem 1rem;
@@ -385,14 +753,16 @@ const authorMode = import.meta.env.DEV;
     letter-spacing: 0.11em;
     text-transform: uppercase;
   }
+  .graph-help span { margin-right: auto; }
+  .graph-help kbd { min-width: 1.35rem; border: 1px solid rgba(255, 255, 255, .08); padding: .18rem .3rem; color: #52525b; font: inherit; text-align: center; }
 
   .report-graph--compact { border: 0; background: transparent; }
   .report-graph--compact .graph-toolbar { display: block; border-bottom: 0; padding: 0 0 0.8rem; line-height: 1.7; }
   .report-graph--compact .graph-toolbar p { margin-top: 0.4rem; }
   .report-graph--compact .graph-legend { gap: 0.6rem; }
-  .report-graph--compact .graph-viewport { overflow: hidden; background-size: 24px 24px; }
+  .report-graph--compact .graph-viewport { overflow: hidden; background-size: 24px 24px; cursor: default; touch-action: auto; }
   .report-graph--compact .graph-empty { min-height: 190px; padding: 1rem; }
-  .report-graph--compact svg { min-width: 0; }
+  .report-graph--compact svg { min-width: 0; height: auto; }
   .report-graph--compact .node-halo { fill: #0b0e0e; stroke: #3f3f46; }
   .report-graph--compact .node-title { font-size: 7px; fill: #71717a; }
   .report-graph--compact .node-code { font-size: 7px; }
@@ -402,7 +772,12 @@ const authorMode = import.meta.env.DEV;
 
   @media (max-width: 680px) {
     .graph-toolbar { align-items: flex-start; flex-direction: column; }
-    svg { min-width: 700px; }
+    .graph-toolbar__status { width: 100%; align-items: flex-start; flex-direction: column; }
+    .graph-controls { width: 100%; }
+    .graph-controls button,
+    .graph-controls span { flex: 1; }
+    .graph-help { align-items: flex-start; flex-wrap: wrap; }
+    svg { min-width: 0; }
   }
 
   @media (prefers-reduced-motion: reduce) {
